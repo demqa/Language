@@ -1,35 +1,21 @@
 #ifndef BIN_TREE_CONFIG_H
-
 #define BIN_TREE_CONFIG_H
 
 #include <assert.h>
 
 #include "../Debug/debug_lib.h"
+#include "../Tokens/tokens.h"
 
 enum ValueType
 {
-    ID_TYPE  = 1, // IDENTIFIER
-    NUM_TYPE = 2, // NUMBER
-    KEY_TYPE = 3, // KEYWORD
+    ID_TYPE   = 1, // IDENTIFIER
+    NUM_TYPE  = 2, // NUMBER
+    KEYW_TYPE = 3, // KEYWORD
 };
 
-struct RT
-{
-    int    type;
+typedef Token_t Value_t;
 
-    union NodeType
-    {
-        size_t    id;
-        size_t key_w;
-        double   num;
-    } arg;
-};
-
-typedef RT Value_t;
-
-const RT DEAD_ELEM = {300};
-
-Value_t *DEAD_VAL  = nullptr;
+const Token_t DEAD_ELEM = {300};
 
 // FILE *TREE_LOG_FILE_DEFAULT = stderr;
 

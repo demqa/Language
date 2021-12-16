@@ -1,0 +1,12 @@
+DEF_KEYWORD(MAIN,   0x500, main  )
+
+DEF_KEYWORD(IF,     0x501, if    )
+DEF_KEYWORD(ELSE,   0x502, else  )
+DEF_KEYWORD(THEN,   0x503, then  )
+
+DEF_KEYWORD(DO,     0x504, do    )
+DEF_KEYWORD(WHILE,  0x505, while )
+DEF_KEYWORD(FOR,    0x506, for   )
+
+DEF_KEYWORD(CONST,  0x507, const )
+DEF_KEYWORD(RETURN, 0x508, return)
