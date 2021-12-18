@@ -2,13 +2,16 @@
 
 int main()
 {
+    ttree = (Tree_t *) calloc(1, sizeof(Tree_t));
+    TreeCtor(ttree);
+
     Tokens_t *tokens = (Tokens_t *) calloc(1, sizeof(Tokens_t));
     if (tokens == nullptr) return 101010101;
 
     TokensCtor(tokens);
 
     GetTokens("Code/code", tokens);
-    
+
     PrintTokens(tokens);
 
     Tree_t *tree = (Tree_t *)       calloc(1, sizeof(Tree_t));
@@ -24,6 +27,8 @@ int main()
 
     free(tokens);
     free(tree);
+
+    free(ttree);
 
     return 0;
 }
@@ -48,6 +53,8 @@ int PrintToken(Tokens_t *tokens, size_t index)
 
     status = TokensElem(tokens, index, &token);
     if (status) return status;
+
+    fprintf(stderr, "%lu: ", index);
 
     if (token == nullptr)
     {

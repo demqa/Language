@@ -3,6 +3,8 @@
 
 #include "../LexemAnalyzer/lex_anal.h"
 
+extern Tree_t *ttree;
+
 // int SyntaxError   (Tokens_t *tokens, size_t index);
 int FillTree         (Tree_t *tree,     Tokens_t *tokens);
 int ConnectNodes     (Node_t *parent,   Node_t *node, ChildNumeration child);
@@ -11,7 +13,7 @@ int PrintTokens      (Tokens_t *tokens);
 int PrintToken       (Tokens_t *tokens, size_t  index);
 int InitKeyword      (Node_t  **node,                  const int keyword);
 int Require          (Tokens_t *tokens, size_t *index, const int  symbol);
-Node_t *GetAssign    (Tokens_t *tokens, size_t *index);
+Node_t *GetToken    (Tokens_t *tokens, size_t *index);
 Node_t *GetVar       (Tokens_t *tokens, size_t *index);
 Node_t *GetFuncDef   (Tokens_t *tokens, size_t *index);
 Node_t *GetFuncParams(Tokens_t *tokens, size_t *index);
@@ -49,5 +51,46 @@ namespace ASTree
     };
 
 }
+
+#define TOKEN_KEYW(__KEYW__)  (token->type == KEYW_TYPE && token->arg.key_w == (__KEYW__))
+
+#define KEYW token->arg.key_w
+
+#define TOKEN                 \
+    PRINT_S("TOKEN");          \
+    PrintToken(tokens, *index); \
+
+#define CATCH_ERR  \
+do                  \
+{                    \
+    if (status)        \
+    {                   \
+        PRINT_X(status); \
+        return 0;         \
+    }                      \
+}                           \
+while (0)
+
+#define CATCH_NULL(PTR)        \
+do                              \
+{                                \
+    if ((PTR) == nullptr)         \
+    {                              \
+        PRINT_PTR(PTR);             \
+        return nullptr;              \
+    }                                 \
+} while (0)
+
+#define GET_NEXT_TOKEN                   \
+do                                        \
+{                                          \
+    status = TokensElem(tokens, ++(*index), &token); \
+    CATCH_ERR;                               \
+}                                             \
+while (0)
+
+#define TDUMP(NODE)    \
+    ttree->root = NODE; \
+    TreeDump(ttree);
 
 #endif // AST_COMP_H

@@ -1,10 +1,23 @@
 
-func foo(x)
-{
-    x = 1;
-}
-
 main1 main2
 {
-    x + 1;
+    x = 1+3*12;
+}
+
+y = 0;
+
+func foo(x)
+{
+    x = 12^123^123;
+    foo(x*12^123^123*foo(123));
+
+    while ( n < 1 )
+    {
+        clown = 123;
+    }
+
+    if (x * 123 == 23)
+    {
+        uebishe = 0;
+    }
 }

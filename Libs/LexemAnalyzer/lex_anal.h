@@ -24,7 +24,14 @@ namespace Text
         DEST_PTR_IS_NULL      = 0x306,
 
     };
+
+    enum StringEquality
+    {
+        EQUAL     = 1,
+        NOT_EQUAL = 0,
+    };
 }
+
 
 int GetTokens(const char *filename, Tokens_t *tokens);
 int StrEqual (const char *l, const char *r);

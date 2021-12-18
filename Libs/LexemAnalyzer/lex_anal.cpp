@@ -74,29 +74,36 @@ int SkipSpaces(char **ptr)
     return Tokens::FUNC_IS_OK;
 }
 
-int StrEqual(const char *l, const char *r)
+int StrEqual(const char *ptr, const char *reference)
 {
-    if (l == nullptr || r == nullptr) return 0;
+    if (ptr == nullptr || reference == nullptr) return 0;
 
-    int i = 0;
-    for (i = 0; l[i] != '\0' && r[i] != '\0'; i++)
-        if (l[i] != r[i]) return 0;
+    size_t i = 0;
 
-    return (l[i] == '\0' && isspace(r[i]) ||
-            r[i] == '\0' && isspace(l[i]) ||
-            l[i] == '\0' && r[i] == '\0' ||
-            isspace(l[i]) && isspace(r[i]));
+    for (i = 0; 'while not \0' ; ++i)
+    {
+        if (reference[i] == '\0') return i;
+
+        if (ptr[i] == '\0' || ptr[i] != reference[i])
+        {
+            return Text::NOT_EQUAL;
+        }
+    }
+
+    return 1;
 }
 
-int IsKeyword (char *word, int *keyword_code)
+int IsKeyword (char *word, int *keyword_code, size_t *length)
 {
     if (keyword_code == nullptr || 
-        word         == nullptr) return Tokens::PTR_IS_NULL;
+        word         == nullptr || 
+        length       == nullptr) return Tokens::PTR_IS_NULL;
 
-#define DEF_KEYW(DEF, CODE, WORD)               \
-    if (StrEqual(word, #WORD)) \
-    {                                             \
-        *keyword_code = CODE;                      \
+#define DEF_KEYW(DEF, CODE, WORD)              \
+    if (StrEqual(word, #WORD))                  \
+    {                                            \
+        *keyword_code = CODE;                     \
+        *length       = StrEqual(word, #WORD);     \
     }                                               \
     else
 
@@ -104,6 +111,7 @@ int IsKeyword (char *word, int *keyword_code)
 /*  else */
     {
         *keyword_code = 0;
+        *length       = 0;
         return Tokens::FUNC_IS_OK;
     }
 
@@ -112,25 +120,32 @@ int IsKeyword (char *word, int *keyword_code)
     return Tokens::FUNC_IS_OK;
 }
 
-int GetWord   (char **ptr, char *word)
+int GetWord   (char **ptr, char *word, size_t *length)
 {
-    if (ptr == nullptr || *ptr == nullptr || word == nullptr) return Tokens::PTR_IS_NULL;
-
+    if ( ptr == nullptr || *ptr   == nullptr ||
+        word == nullptr || length == nullptr) return Tokens::PTR_IS_NULL;
+    
     int status = Tokens::FUNC_IS_OK;
+
+    char *str = (*ptr);
 
     size_t size = 0;
 
     do
     {
-        word[size++] = *((*ptr)++);
+        word[size++] = *(str++);
     }
-    while ((**ptr >= 'a' && **ptr <= 'z'  ||
-            **ptr >= 'A' && **ptr <= 'Z'  || 
-            **ptr >= '0' && **ptr <= '9'  ||
-            **ptr == '_' || **ptr == '$') && size != WORD_MAX_LEN);
+    while ((*str >= 'a' && *str <= 'z'  ||
+            *str >= 'A' && *str <= 'Z'  || 
+            *str >= '0' && *str <= '9'  ||
+            *str == '_' || *str == '$') && size != WORD_MAX_LEN);
 
-    if (size == WORD_MAX_LEN && isspace(**ptr) != 0) return Tokens::IDENTIFIER_MAX_LEN_REACHED;
+    if (size == WORD_MAX_LEN && isspace((*ptr)[size]) != 0) return Tokens::IDENTIFIER_MAX_LEN_REACHED;
     
+    *length = size;
+
+    PRINT_UL(size);
+
     return status;
 }
 
@@ -153,13 +168,16 @@ int GetToken  (char **ptr, Tokens_t *tokens)
         char *word = (char *) calloc(WORD_MAX_LEN + 1, sizeof(char));
         if (word == nullptr) return Tokens::BAD_ALLOC;
 
-        int length = 0;
+        size_t word_length = 0;
 
-        status = GetWord(ptr, word);
+        status = GetWord(ptr, word, &word_length);
+
         if (status) return status;
 
+        size_t keyw_length = 0;
+
         int keyword_code = 0;
-        status = IsKeyword(word, &keyword_code);
+        status = IsKeyword(word, &keyword_code, &keyw_length);
         if (status) return status;
 
         if (keyword_code)
@@ -167,12 +185,14 @@ int GetToken  (char **ptr, Tokens_t *tokens)
             // keyword
             token.type      = KEYW_TYPE;
             token.arg.key_w = keyword_code;
+            (*ptr)         += keyw_length;
         }
         else
         {
             // identifier
             token.type      = ID_TYPE;
             memcpy(token.arg.id, word, WORD_MAX_LEN * sizeof(char));
+            (*ptr)         += word_length;
         }
 
         free(word);
@@ -188,7 +208,7 @@ int GetToken  (char **ptr, Tokens_t *tokens)
         sscanf(*ptr, "%lf%n", &num, &length);
         if (length == 0)   return Tokens::SSCANF_CANT_SCAN;
         if (num    == NAN) return Tokens::SSCANF_BAD_ALLOC;
-        *ptr += length;
+        (*ptr) += length;
 
         token.arg.num = num;
     }
@@ -223,7 +243,8 @@ int GetToken  (char **ptr, Tokens_t *tokens)
 
         if (sign == 0)
         {
-            fprintf(stderr, "%s", *ptr);
+            fprintf(stderr, "ERROR: %s", *ptr);
+
             return Tokens::UNEXPECTED_LEXEM;
         }
         

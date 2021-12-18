@@ -295,6 +295,7 @@ TreeStatus TreeVerify      (Tree_t *tree)
 }
 
 extern FILE *TREE_LOG_FILE_DEFAULT = stderr;
+extern Tree_t *ttree = nullptr;
 
 static void PrintNode      (const Node_t *node, const size_t *number_of_node, FILE *dump_file)
 {

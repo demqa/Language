@@ -71,13 +71,13 @@ int TokensElem    (Tokens_t *tokens, size_t index, Token_t **token);
 
 enum KeywordCode
 {
-    KEYW_PARAM    = 0x533, // 0x...
-    KEYW_STMT     = 0x544, // 0x57A7
-    KEYW_EOF      = 0x555, // 0xEOF
-    KEYW_DEFINE   = 0x566, // 0xDEF
+    // KEYW_PARAM    = 0x533, // 0x...
+    // KEYW_STMT     = 0x544, // 0x57A7
+    // KEYW_EOF      = 0x555, // 0xEOF
+    // KEYW_DEFINE   = 0x566, // 0xDEF
     // KEYW_FUNC     = 0x577, // 0xF17C
-    KEYW_CALL     = 0x588, // 0xCA11
-    KEYW_DECISION = 0x599, // 0xDEC15
+    // KEYW_CALL     = 0x588, // 0xCA11
+    // KEYW_DECISION = 0x599, // 0xDEC15
     
 #define DEF_KEYW(DEF, CODE, WORD) \
     KEYW_ ## DEF = CODE,
