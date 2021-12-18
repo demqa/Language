@@ -19,7 +19,7 @@ do{                                 \
 Node_t    *DEAD_PTR    = (Node_t *) nullptr;
 size_t     DEAD_SIZE   = 1000 - 7;
 TreeStatus DEAD_STATUS = (TreeStatus) (1000 - 7);
-Value_t *DEAD_VAL      = nullptr;
+Value_t   *DEAD_VAL    = nullptr;
 
 TreeStatus TreeCtor        (Tree_t *tree)
 {
@@ -344,19 +344,19 @@ static void PrintNode      (const Node_t *node, const size_t *number_of_node, FI
     else
     if (node->value->type == KEYW_TYPE)
     {
-        #define DEF_KEYWORD(DEF, CODE, WORD)  \
+        #define DEF_KEYW(DEF, CODE, WORD)     \
             case KEYW_ ## DEF:                 \
                 fprintf(dump_file, "%s", #DEF); \
                 break;                           \
 
         #define DEF_OPER(DEF, CODE, SIGN)          \
-            case OPER_ ## DEF:                      \
+            case KEYW_ ## DEF:                      \
                 fprintf(dump_file, "%s", #SIGN);     \
                 break;
 
-        #define DEF_BRAC(DEF, CODE, BRAC)               \
-            case BRAC_ ## DEF:                           \
-                fprintf(dump_file, "%c", BRAC);           \
+        #define DEF_HELP(DEF, CODE, HELP)               \
+            case KEYW_ ## DEF:                           \
+                fprintf(dump_file, "%c", HELP);           \
                 break;
         
         switch (node->value->arg.key_w)
@@ -368,9 +368,9 @@ static void PrintNode      (const Node_t *node, const size_t *number_of_node, FI
                 break;
         }
 
-        #undef DEF_KEYWORD
+        #undef DEF_KEYW
         #undef DEF_OPER
-        #undef DEF_BRAC
+        #undef DEF_HELP
 
         // fprintf(dump_file, "%c", node->value->arg.key_w);
     }

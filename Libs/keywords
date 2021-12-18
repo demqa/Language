@@ -1,12 +1,27 @@
-DEF_KEYWORD(MAIN,   0x500, main  )
+DEF_KEYW(MAIN1,  0x500, main1) // DANSE macabre — пляска смерти
+DEF_KEYW(MAIN2,  0x510, main2) // danse MACABRE — пляска смерти
+DEF_KEYW(FUNC,   0x501, func) // Opus          — опус, сочинение
+DEF_KEYW(IF,     0x502, if) // Piacere — желание;
+DEF_KEYW(ELSE,   0x503, else) // Ostinato — неотступно
+DEF_KEYW(THEN,   0x504, then) // Deciso — решительно
+DEF_KEYW(DO,     0x505, do) // Attacca — продолжать без перерыва
+DEF_KEYW(WHILE,  0x506, while) // Repetizione — повторение
+DEF_KEYW(FOR,    0x507, for) // 
+DEF_KEYW(CONST,  0x508, const) // Sempre семпре—постоянно
+DEF_KEYW(RETURN, 0x509, return) // Fine — конец;
+DEF_KEYW(INCR,   0x50A, incr) // Crescendo   — постепенно усиливая
+DEF_KEYW(DECR,   0x50B, decr) // Decrescendo — постепенно затихая
+// DEF_KEYW(OPFIG,  0x50C, OPFIG ) // Accelerando аччелерандо — ускоряя
+// DEF_KEYW(CLFIG,  0x50D, CLFIG ) // Rallentando раллентандо — замедляя
+DEF_KEYW(PRINT,  0x50E, print) // Forte форте — сильно, громко
+DEF_KEYW(SCAN,   0x50F, scan) // Marcato маркато — четко, подчеркнуто
 
-DEF_KEYWORD(IF,     0x501, if    )
-DEF_KEYWORD(ELSE,   0x502, else  )
-DEF_KEYWORD(THEN,   0x503, then  )
+/*
 
-DEF_KEYWORD(DO,     0x504, do    )
-DEF_KEYWORD(WHILE,  0x505, while )
-DEF_KEYWORD(FOR,    0x506, for   )
+Sehr зер (нем.) — очень
+Semplice семпличе — просто
 
-DEF_KEYWORD(CONST,  0x507, const )
-DEF_KEYWORD(RETURN, 0x508, return)
+Sentimento сентименто — чувство
+Russico руссико — русское, в русском стиле
+
+*/

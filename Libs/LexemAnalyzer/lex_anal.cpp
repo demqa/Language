@@ -1,6 +1,6 @@
 #include "lex_anal.h"
 
-int Filesize  (FILE *stream, size_t *filesize)  
+int Filesize  (FILE  *stream, size_t *filesize)  
 {
     if (stream == nullptr) return Text::STREAM_IS_NULL;
 
@@ -13,7 +13,7 @@ int Filesize  (FILE *stream, size_t *filesize)
     return 0;
 }
 
-int ReadBuffer(char **buffer, FILE *stream)
+int ReadBuffer(char **buffer, FILE   *stream)
 {
     if ( stream == nullptr) return Text::STREAM_IS_NULL;
     if ( buffer == nullptr) return Text::BUFFER_IS_NULL;
@@ -74,15 +74,29 @@ int SkipSpaces(char **ptr)
     return Tokens::FUNC_IS_OK;
 }
 
-int IsKeyword(char *word, int *keyword_code)
+int StrEqual(const char *l, const char *r)
+{
+    if (l == nullptr || r == nullptr) return 0;
+
+    int i = 0;
+    for (i = 0; l[i] != '\0' && r[i] != '\0'; i++)
+        if (l[i] != r[i]) return 0;
+
+    return (l[i] == '\0' && isspace(r[i]) ||
+            r[i] == '\0' && isspace(l[i]) ||
+            l[i] == '\0' && r[i] == '\0' ||
+            isspace(l[i]) && isspace(r[i]));
+}
+
+int IsKeyword (char *word, int *keyword_code)
 {
     if (keyword_code == nullptr || 
         word         == nullptr) return Tokens::PTR_IS_NULL;
 
-#define DEF_KEYWORD(DEF, CODE, WORD)            \
-    if (strncmp(word, #WORD, strlen(word)) == 0) \
+#define DEF_KEYW(DEF, CODE, WORD)               \
+    if (StrEqual(word, #WORD)) \
     {                                             \
-        *keyword_code = KEYW_ ## DEF;              \
+        *keyword_code = CODE;                      \
     }                                               \
     else
 
@@ -93,18 +107,19 @@ int IsKeyword(char *word, int *keyword_code)
         return Tokens::FUNC_IS_OK;
     }
 
-#undef DEF_KEYWORD
+#undef DEF_KEYW
 
     return Tokens::FUNC_IS_OK;
 }
 
-int GetWord(char **ptr, char *word)
+int GetWord   (char **ptr, char *word)
 {
     if (ptr == nullptr || *ptr == nullptr || word == nullptr) return Tokens::PTR_IS_NULL;
 
     int status = Tokens::FUNC_IS_OK;
 
     size_t size = 0;
+
     do
     {
         word[size++] = *((*ptr)++);
@@ -112,14 +127,14 @@ int GetWord(char **ptr, char *word)
     while ((**ptr >= 'a' && **ptr <= 'z'  ||
             **ptr >= 'A' && **ptr <= 'Z'  || 
             **ptr >= '0' && **ptr <= '9'  ||
-            **ptr == '_' && **ptr == '$') && size != WORD_MAX_LEN);
+            **ptr == '_' || **ptr == '$') && size != WORD_MAX_LEN);
 
     if (size == WORD_MAX_LEN && isspace(**ptr) != 0) return Tokens::IDENTIFIER_MAX_LEN_REACHED;
     
     return status;
 }
 
-int GetToken (char **ptr, Tokens_t *tokens)
+int GetToken  (char **ptr, Tokens_t *tokens)
 {
     int status = TokensVerify(tokens);
     if (status) return status;
@@ -135,7 +150,7 @@ int GetToken (char **ptr, Tokens_t *tokens)
 
     if (isalpha(**ptr) || **ptr == '$')
     {
-        char *word = (char *) calloc(WORD_MAX_LEN, sizeof(char));
+        char *word = (char *) calloc(WORD_MAX_LEN + 1, sizeof(char));
         if (word == nullptr) return Tokens::BAD_ALLOC;
 
         int length = 0;
@@ -183,18 +198,18 @@ int GetToken (char **ptr, Tokens_t *tokens)
 
         // operator
         #define DEF_OPER(DEF, CODE, SIGN)                \
-            if (strncmp(*ptr, #SIGN, strlen(#SIGN)) == 0) \
+            if (StrEqual(*ptr, #SIGN))                    \
             {                                              \
                 sign = CODE;                                \
                 *ptr += strlen(#SIGN);                       \
             }                                                 \
             else
 
-        #define DEF_BRAC(DEF, CODE, BRAC)                        \
-            if (**ptr == BRAC)                                    \
+        #define DEF_HELP(DEF, CODE, HELP)                        \
+            if (**ptr == HELP)                                    \
             {                                                      \
-                sign =  CODE;                                        \
-                *ptr += 1;                                     \
+                sign = CODE;                                        \
+                *ptr += 1;                                           \
             }                                                         \
             else
 
@@ -213,7 +228,7 @@ int GetToken (char **ptr, Tokens_t *tokens)
         }
         
         #undef DEF_OPER
-        #undef DEF_BRAC
+        #undef DEF_HELP
 
         token.arg.key_w = sign;
     }
@@ -224,7 +239,7 @@ int GetToken (char **ptr, Tokens_t *tokens)
     return Tokens::FUNC_IS_OK;
 }
 
-int GetTokens(const char *filename, Tokens_t *tokens)
+int GetTokens (const char *filename, Tokens_t *tokens)
 {
     if (filename  == nullptr) return Tokens::FILENAME_IS_NULL;
     if (tokens    == nullptr) return Tokens::TOKENS_ARE_NULL;
@@ -239,7 +254,7 @@ int GetTokens(const char *filename, Tokens_t *tokens)
     
     char *buffer = nullptr;
     status = ReadBuffer(&buffer, stream);
-    PRINT_X(status);
+    // PRINT_X(status);
     if (status) return status;
     
     char *ptr = buffer;
@@ -247,9 +262,17 @@ int GetTokens(const char *filename, Tokens_t *tokens)
     do
     {
         status = GetToken(&ptr, tokens);
-        PRINT_X(status);
+        // PRINT_X(status);
     }
     while (status == Tokens::FUNC_IS_OK);
+
+    if (status == Tokens::END_OF_FILE)
+    {
+        Token_t token   = {};
+        token.type      = KEYW_TYPE;
+        token.arg.key_w = KEYW_EOF;
+        TokensPush(tokens, &token);
+    }
     
     free(buffer);
 

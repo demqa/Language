@@ -1,2 +1,911 @@
 #include "ast_comp.h"
 
+// DONE
+int FillTree    (Tree_t *tree, Tokens_t *tokens)
+{
+    int status = TreeVerify(tree);
+    if (status) return status;
+
+    status = TokensVerify(tokens);
+    if (status) return status;
+
+    size_t index = 0;
+    tree->root = GetG(tokens, &index);
+
+    return status;
+}
+
+// DONE
+// int SyntaxError (Tokens_t *tokens, size_t index)
+// {
+//     int status = TokensVerify(tokens);
+//     if (status) return status;
+
+//     fprintf(stderr, "INVALID_INPUT_FORMAT\n");
+
+//     // TODO
+//     fprintf(stderr, "EXPECTED NUM\n");
+    
+//     fprintf(stderr, "PRINTED:\n");
+//     PrintToken(tokens, index);
+
+//     return ASTree::FUNC_IS_OK;
+// }
+
+// DONE
+int Require     (Tokens_t *tokens, size_t *index, const int symbol)
+{
+    int status = TokensVerify(tokens);
+    if (status)           return status;
+
+    Token_t *token = nullptr;
+    TokensElem(tokens, *index, &token);
+
+    if (token->type != KEYW_TYPE || token->arg.key_w != symbol)
+    {
+        fprintf(stderr, "INVALID_INPUT_FORMAT\n");
+
+        #define DEF_KEYW(DEF, CODE, WORD)    \
+            case KEYW_ ## DEF:                \
+                fprintf(stderr, "%s\n", #DEF); \
+                break;
+        
+        #define DEF_OPER(DEF, CODE, OPER)         \
+            case KEYW_ ## DEF:                     \
+                fprintf(stderr, "%s\n", #OPER);     \
+                break;
+
+        #define DEF_HELP(DEF, CODE, SIGN)              \
+            case KEYW_ ## DEF:                          \
+                fprintf(stderr, "%c\n", SIGN);           \
+                break;
+
+        switch (symbol)
+        {
+            #include "../keywords"
+            #include "../operators"
+            
+            default:
+                fprintf(stderr, "EXPECTED: %x\n", symbol);
+                break;
+        }
+
+        #undef DEF_KEYW
+        #undef DEF_OPER
+        #undef DEF_HELP
+
+
+        fprintf(stderr, "INPUT:\n");
+        PrintToken(tokens, *index);
+
+        return ASTree::INVALID_SYNTAX;
+    }
+    else
+    {
+        *index++;
+    }
+    
+    return ASTree::FUNC_IS_OK;
+}
+
+#define TOKEN_KEYW(__KEYW__)  (token->type == KEYW_TYPE && token->arg.key_w == (__KEYW__))
+
+#define KEYW token->arg.key_w
+
+#define CATCH_ERR   \
+do                   \
+{                     \
+    if (status)        \
+    {                   \
+        PRINT_X(status); \
+        return nullptr;   \
+    }                      \
+}                           \
+while (0)
+
+#define CATCH_NULL(PTR)        \
+do                              \
+{                                \
+    if ((PTR) == nullptr)         \
+    {                              \
+        PRINT_PTR(PTR);             \
+        return nullptr;              \
+    }                                 \
+} while (0)
+
+#define GET_NEXT_TOKEN                   \
+do                                        \
+{                                          \
+    status = TokensElem(tokens, ++(*index), &token); \
+    CATCH_ERR;                               \
+}                                             \
+while (0)
+
+// DONE
+Node_t *GetG(Tokens_t *tokens, size_t *index)
+{
+    int status = TokensVerify(tokens);
+    CATCH_ERR;
+    if (index == nullptr) return nullptr;
+
+    Node_t *ast = GetGS(tokens, index);
+    assert(ast != nullptr);
+
+    if (Require(tokens, index, KEYW_EOF)) return nullptr;
+
+    return ast;
+}
+
+// DONE
+int InitEmptyNode(Node_t **node_)
+{
+    if ( node_ == nullptr) return ASTree::NODE_IS_NULL;
+    if (*node_ != nullptr) return ASTree::DESTPTR_ISNT_NULL;
+
+    int status = ASTree::FUNC_IS_OK;
+
+    Node_t *node = nullptr;
+
+    node = (Node_t *) calloc(1, sizeof(Node_t));
+    if (node == nullptr)   return ASTree::BAD_ALLOC;
+
+    node->value = (Token_t *) calloc(1, sizeof(Token_t));
+    if (node->value == nullptr) return ASTree::BAD_ALLOC;
+
+    *node_ = node;
+
+    return status;
+}
+
+// DONE
+int InitKeyword(Node_t **node, const int keyword)
+{
+    int status = InitEmptyNode(node);
+    if (status) return status;
+
+    Token_t *token = (*node)->value;
+
+    token->type      = KEYW_TYPE;
+    token->arg.key_w = keyword;
+
+    return status;
+}
+
+// DONE
+int ConnectNodes(Node_t *parent, Node_t *node, ChildNumeration child)
+{
+    int status = NodeVerify(parent);
+    if (status) return status;
+
+    status = NodeVerify(node);
+    if (status) return status;
+
+    if (node->parent != nullptr)
+    {
+        PRINT(PROGRAMMER_IMBECILE);
+        return ASTree::INVALID_CONNECTION_NODE;
+    }
+
+    if (child == L_CHILD)
+    {
+        if (parent->left != nullptr)
+        {
+            PRINT(LEFT_CHILD_ISNT_NULL);
+            return ASTree::INVALID_CONNECTION_PAR;
+        }
+
+        node->parent  = parent;
+        parent->left  = node;
+    }
+    else
+    if (child == R_CHILD)
+    {
+        if (parent->right != nullptr)
+        {
+            PRINT(RIGHT_CHILD_ISNT_NULL);
+            return ASTree::INVALID_CONNECTION_PAR;
+        }
+
+        node->parent  = parent;
+        parent->right = node;
+    }
+    else
+    {
+        PRINT(CANT_ADD_N_CHILD);
+        return ASTree::CHILD_IS_INVALID;
+    }
+
+    return ASTree::FUNC_IS_OK;
+}
+
+// DONE
+Node_t *GetAssign(Tokens_t *tokens, size_t *index)
+{
+    int status = TokensVerify(tokens);
+    CATCH_ERR;
+    if (index == nullptr) return nullptr;
+
+    Token_t *token = nullptr;
+    status = TokensElem(tokens, *index, &token);
+    CATCH_ERR;
+
+    Node_t *node = nullptr;
+    status = InitEmptyNode(&node);
+
+    memcpy(node->value, token, sizeof(Token_t));
+
+    *index++;
+
+    return node;
+}
+
+// DONE
+Node_t *GetGS(Tokens_t *tokens, size_t *index)
+{
+    int status = TokensVerify(tokens);
+    CATCH_ERR;
+    if (index == nullptr) return nullptr;
+
+    Token_t *token      = nullptr;
+
+    Node_t  *glob_stmts = nullptr;
+    Node_t  *current    = nullptr;
+
+    Node_t  *stmt       = nullptr;
+
+    while (*index < tokens->size)
+    {
+        stmt = nullptr;
+
+        status = InitKeyword(&stmt, KEYW_STMT);
+        CATCH_ERR;
+
+        if (glob_stmts != nullptr)
+        {
+            status = ConnectNodes(stmt, glob_stmts, L_CHILD);
+            CATCH_ERR;
+        }
+
+        glob_stmts = stmt;
+
+        status = TokensElem(tokens, *index, &token);
+        CATCH_ERR;
+            
+        if (TOKEN_KEYW(KEYW_EOF)) return nullptr;
+
+        if (TOKEN_KEYW(KEYW_CONST) || token->type == ID_TYPE)
+        {
+            Node_t *var    = GetVar(tokens, index); // *index++
+            CATCH_NULL(current);
+
+            Node_t *assign = GetAssign(tokens, index); // *index++
+            CATCH_NULL(assign);
+
+            Node_t *expr   = GetE(tokens, index); // *index += n;
+            CATCH_NULL(expr);
+
+            if (Require(tokens, index, KEYW_DOTPOT)) return nullptr;
+
+            status = ConnectNodes(assign, current, L_CHILD);
+            CATCH_ERR;
+
+            status = ConnectNodes(assign,    expr, R_CHILD);
+            CATCH_ERR;
+
+            current = assign;
+        }
+        else
+        if (token->type == KEYW_TYPE)
+        {
+            current = GetFuncDef(tokens, index);
+        }
+        else
+        {
+            PRINT(INVALID_SYNTAX);
+            NodesDtor(stmt);
+            PrintToken(tokens, *index);
+            return nullptr;
+        }
+
+        status = ConnectNodes(glob_stmts, current, R_CHILD);
+        CATCH_ERR;
+    }
+
+    assert(glob_stmts != nullptr);
+
+    return glob_stmts;
+}
+
+// DONE
+Node_t *GetStmts(Tokens_t *tokens, size_t *index)
+{
+    int status = TokensVerify(tokens);
+    CATCH_ERR;
+    if (index == nullptr) return nullptr;
+
+    Token_t *token = nullptr;
+    status = TokensElem(tokens, *index, &token);
+
+    if (!TOKEN_KEYW(KEYW_OPFIG)) return nullptr;
+    GET_NEXT_TOKEN;
+
+    if ( TOKEN_KEYW(KEYW_CLFIG)) return nullptr;
+
+    Node_t *glob_stmts = nullptr;
+    Node_t *stmt       = nullptr;
+
+    Node_t *current    = nullptr;
+
+    status = InitKeyword(&stmt, KEYW_STMT);
+    CATCH_ERR;
+
+    while (*index < tokens->size)
+    {
+        token = nullptr;
+
+        status = TokensElem(tokens, *index, &token);
+        CATCH_ERR;
+
+        stmt = nullptr;
+
+        status = InitKeyword(&stmt, KEYW_STMT);
+        CATCH_ERR;
+        
+        if (TOKEN_KEYW(KEYW_CLFIG))
+        {
+            NodesDtor(stmt);
+            return glob_stmts;
+        }
+
+        current = GetStmt(tokens, index);
+        if (current == nullptr) return nullptr;
+
+        status = ConnectNodes(stmt, current, R_CHILD);
+        CATCH_ERR;
+
+        if (glob_stmts != nullptr)
+        {
+            status = ConnectNodes(stmt, glob_stmts, L_CHILD);
+            CATCH_ERR;
+        }
+
+        glob_stmts = stmt;
+    }
+
+    PRINT(CLOSE_FIGURE_BRACKET_WASNT_REACHED_THOUGH);
+    return nullptr;
+
+    // return glob_stmts;
+}
+
+// DONE
+Node_t *GetStmt (Tokens_t *tokens, size_t *index)
+{
+    int status = TokensVerify(tokens);
+    CATCH_ERR;
+    if (index == nullptr) return nullptr;
+
+    Token_t *token = nullptr;
+    status = TokensElem(tokens, *index, &token);
+
+    Node_t *stmt_child = nullptr;
+
+    if (token->type == ID_TYPE /* || TOKEN_KEYW(KEYW_CONST) */)
+    {
+        Token_t *first_token = token;
+
+        GET_NEXT_TOKEN;
+        
+        // CASE 1: ASSIGNMENT
+        //   TODO: ADD FUNCTION OF SEARCHING SOME KEYWORD AMONG NEXT N TOKENS
+        //         & THEN I CAN DO CONSTANSTS & ASSIGNS IN EASY & LACONIC WAY
+
+        if (TOKEN_KEYW(KEYW_ASSIGN))
+        {
+            *index--;
+            Node_t *variable = GetVar(tokens, index);
+            CATCH_NULL(variable);
+
+            Node_t *assign   = GetAssign(tokens, index);
+            CATCH_NULL(assign);
+
+            Node_t *expr     = GetE(tokens, index);
+            CATCH_NULL(expr);
+
+            status = ConnectNodes(assign, variable, L_CHILD);
+            CATCH_ERR;
+
+            status = ConnectNodes(assign,     expr, R_CHILD);
+            CATCH_ERR;
+
+            stmt_child = assign;
+
+            return stmt_child;
+        }
+        else
+        {
+            // NOT_ASSIGNMENT
+            *index--;
+            token = first_token;
+        }
+    }
+
+    // CASE 2: EXPRESSION
+
+    // TODO:
+    // CASE 3: return
+
+    // CASE 4: if
+
+    // CASE 5: while
+
+    stmt_child = GetE(tokens, index);
+    CATCH_NULL(stmt_child);
+
+    if (Require(tokens, index, KEYW_DOTPOT)) return nullptr;
+
+    return stmt_child;
+}
+
+// DONE
+Node_t *GetVar(Tokens_t *tokens, size_t *index)
+{
+    int status = TokensVerify(tokens);
+    CATCH_ERR;
+    if (index == nullptr) return nullptr;
+/*
+    TODO: const type of variables
+    NOW: only variable variables
+
+    Token_t *token = nullptr;
+    TokensElem(tokens, *index, &token);
+
+    if (TOKEN_KEYW(KEYW_CONST))
+    {
+        GET_NEXT_TOKEN;
+        if (token->type != ID_TYPE)
+        {
+            PRINT(INVALID_CONST_SYNTAX);
+            return nullptr;
+        }
+    }
+*/
+    Node_t *variable = GetIdentifier(tokens, index);
+    CATCH_NULL(variable);
+
+    return variable;
+}
+
+// DONE
+Node_t *GetFuncDef(Tokens_t *tokens, size_t *index)
+{
+    int status = TokensVerify(tokens);
+    CATCH_ERR;
+    if (index == nullptr) return nullptr;
+
+    Token_t *token = nullptr;
+    TokensElem(tokens, *index, &token);
+
+    int is_main = 0;
+
+    if (KEYW != KEYW_MAIN1 && KEYW != KEYW_FUNC)
+    {
+        PRINT(KEYWORD_IS_INVALID);
+        return nullptr;
+    }
+
+    if (KEYW == KEYW_MAIN1)
+    {
+        GET_NEXT_TOKEN;
+        if (KEYW != KEYW_MAIN2)
+        {
+            PRINT(WHERE_IS_MAIN2);
+            return nullptr;
+        }
+        is_main = 1;
+        //KEYW == KEYW_MAIN2
+    }
+    // else
+    // KEYW == KEYW_FUNC
+    
+    GET_NEXT_TOKEN;
+
+    Node_t *def    = nullptr;
+    status = InitKeyword(&def,  KEYW_DEFINE);
+    CATCH_ERR;
+
+    Node_t *func   = nullptr;
+    status = InitKeyword(&func, KEYW_FUNC);
+    CATCH_ERR;
+
+    Node_t *name = nullptr;
+    if (is_main)
+    {
+        status = InitKeyword(&name, KEYW_MAIN1);
+        CATCH_ERR;
+    }
+    else
+    {
+        name = GetIdentifier(tokens, index);
+        CATCH_NULL(name);
+    }
+
+    Node_t *params = nullptr;
+    if (!is_main)
+    {
+        params = GetFuncParams(tokens, index);
+        CATCH_NULL(params);
+    }
+
+    Node_t *stmts = GetStmts(tokens, index);
+    CATCH_NULL(stmts);
+
+    status = ConnectNodes(func, name, L_CHILD);
+    CATCH_ERR;
+
+    if (!is_main)
+    {
+        status = ConnectNodes(func, params, R_CHILD);
+        CATCH_ERR;
+    }
+
+    status = ConnectNodes(def,  func, L_CHILD);
+    CATCH_ERR;
+
+    status = ConnectNodes(def, stmts, R_CHILD);
+    CATCH_ERR;
+
+    return def;
+}
+
+// DONE
+Node_t *GetFuncParams(Tokens_t *tokens, size_t *index)
+{
+    int status = TokensVerify(tokens);
+    CATCH_ERR;
+    if (index == nullptr) return nullptr;
+
+    if (Require(tokens, index, KEYW_OPRND)) return nullptr;
+
+    // TODO: many args
+    // NOW : only 1 arg
+    Node_t *var = GetVar(tokens, index);
+    CATCH_NULL(var);
+
+    if (Require(tokens, index, KEYW_CLRND)) return nullptr;
+
+    Node_t *param = nullptr;
+    status = InitKeyword(&param, KEYW_PARAM);
+    CATCH_ERR;
+
+    status = ConnectNodes(param, var, R_CHILD);
+    CATCH_ERR;
+
+    return param;
+}
+
+// DONE
+Node_t *GetCallParams(Tokens_t *tokens, size_t *index)
+{
+    int status = TokensVerify(tokens);
+    CATCH_ERR;
+    if (index == nullptr) return nullptr;
+
+    if (Require(tokens, index, KEYW_OPRND)) return nullptr;
+
+    // TODO: many args
+    //  NOW: only 1 arg
+    Node_t *expr  = GetE(tokens, index);
+    CATCH_NULL(expr);
+
+    /*
+    if (Require(tokens, index, KEYW_COMMA))
+    {
+        *index--;
+        if (Require(tokens, index, KEYW_CLRND))
+        {
+            PRINT(INVALID_SYNTAX);
+            return nullptr;
+        }
+        // continue normal processing
+    }
+    */
+
+    if (Require(tokens, index, KEYW_CLRND)) return nullptr;
+
+    Node_t *param = nullptr;
+    status = InitKeyword(&param, KEYW_PARAM);
+    CATCH_ERR;
+
+    status = ConnectNodes(param, expr, R_CHILD);
+    CATCH_ERR;
+
+    return param;
+}
+
+// DONE
+Node_t *GetIdentifier(Tokens_t *tokens, size_t *index)
+{
+    int status = TokensVerify(tokens);
+    CATCH_ERR;
+    if (index == nullptr) return nullptr;
+
+    Token_t *token = nullptr;
+    TokensElem(tokens, *index, &token);
+
+    if (token->type != ID_TYPE)
+    {
+        PRINT(TOKEN_IS_NOT_IDENTIFIER_THOUGH);
+        PRINT(PROGRAMMER_FREE_YOURSELF);
+        return nullptr;
+    }
+
+    Node_t *id = nullptr;
+    status = InitEmptyNode(&id);
+    CATCH_ERR;
+
+    memcpy(id->value, token, sizeof(Token_t));
+
+    return id;
+}
+
+// DONE
+Node_t *GetW(Tokens_t *tokens, size_t *index)
+{
+    int status = TokensVerify(tokens);
+    CATCH_ERR;
+    if (index == nullptr) return nullptr;
+  
+    Node_t *val = GetP(tokens, index);
+    assert(val != nullptr);
+
+    Token_t *token = nullptr;
+    status = TokensElem(tokens, *index, &token);
+    CATCH_ERR;
+
+    if (TOKEN_KEYW(KEYW_POW))
+    {
+        *index++;
+
+        Node_t *val2 = GetW(tokens, index);
+        assert(val2 != nullptr);
+
+        Node_t *node = nullptr;
+        status = InitKeyword(&node, KEYW_POW);
+        CATCH_ERR;
+
+        status = ConnectNodes(node,  val, L_CHILD);
+        CATCH_ERR;
+    
+        status = ConnectNodes(node, val2, R_CHILD);
+        CATCH_ERR;
+
+        val = node;
+    }
+    
+    return val;
+}
+
+// DONE
+Node_t *GetT(Tokens_t *tokens, size_t *index)
+{
+    int status = TokensVerify(tokens);
+    CATCH_ERR;
+    if (index == nullptr) return nullptr;
+
+    Node_t *val = GetW(tokens, index);
+    assert(val != nullptr);
+
+    Token_t *token = nullptr;
+    status = TokensElem(tokens, *index, &token);
+    CATCH_ERR;    
+
+    while (TOKEN_KEYW(KEYW_MUL) || TOKEN_KEYW(KEYW_DIV))
+    {
+        int op = token->arg.key_w;
+        *index++;
+
+        Node_t *val2 = GetW(tokens, index);
+        assert(val2 != nullptr);
+
+        Node_t *node = nullptr;
+        status = InitKeyword(&node, op);
+        CATCH_ERR;
+
+        status = ConnectNodes(node,  val, L_CHILD);
+        CATCH_ERR;
+    
+        status = ConnectNodes(node, val2, R_CHILD);
+        CATCH_ERR;
+        
+        val = node;
+    }
+
+    return val;
+}
+
+// DONE
+Node_t *GetE(Tokens_t *tokens, size_t *index)
+{
+    int status = TokensVerify(tokens);
+    CATCH_ERR;
+    if (index == nullptr) return nullptr;
+
+    Node_t *val = GetT(tokens, index);
+    assert(val != nullptr);
+
+    Token_t *token = nullptr;
+    status = TokensElem(tokens, *index, &token);
+    CATCH_ERR;   
+
+    while (TOKEN_KEYW(KEYW_ADD) || TOKEN_KEYW(KEYW_SUB))
+    {
+        int op = token->arg.key_w;
+        *index++;
+
+        Node_t *val2 = GetT(tokens, index);
+        assert(val2 != nullptr);
+
+        Node_t *node = nullptr;
+        status = InitKeyword(&node, op);
+        CATCH_ERR;
+
+        status = ConnectNodes(node,  val, L_CHILD);
+        CATCH_ERR;
+    
+        status = ConnectNodes(node, val2, R_CHILD);
+        CATCH_ERR;
+        
+        val = node;
+    }
+
+    return val;
+}
+
+// DONE
+Node_t *GetN(Tokens_t *tokens, size_t *index)
+{
+    int status = TokensVerify(tokens);
+    CATCH_ERR;
+    if (index == nullptr) return nullptr;
+
+    Token_t *token = nullptr;
+    status = TokensElem(tokens, *index, &token);
+    CATCH_ERR;
+
+    Node_t *node = nullptr;
+    status = InitEmptyNode(&node);
+    CATCH_ERR;
+
+    memcpy(node->value, token, sizeof(Token_t));
+
+    return node;
+}
+
+// DONE
+Node_t *GetP(Tokens_t *tokens, size_t *index)
+{
+    int status = TokensVerify(tokens);
+    CATCH_ERR;
+    if (index == nullptr) return nullptr;
+
+    Token_t *token = nullptr;
+    status = TokensElem(tokens, *index, &token);
+    CATCH_ERR;
+
+    int multiplier = 1;
+
+    while (TOKEN_KEYW(KEYW_ADD) || TOKEN_KEYW(KEYW_SUB))
+    {
+        if (TOKEN_KEYW(KEYW_SUB))
+        {
+            multiplier *= -1;
+        }
+        GET_NEXT_TOKEN;
+    }
+    
+    if (multiplier == -1)
+    {
+        Node_t *node = nullptr;
+        status = InitKeyword(&node, KEYW_SUB);
+        CATCH_ERR;
+        
+        Node_t *zero = nullptr;
+        status = InitEmptyNode(&zero);
+        CATCH_ERR;
+
+        zero->value->type    = NUM_TYPE;
+        zero->value->arg.num = 0;
+
+        status = ConnectNodes(node,  zero, L_CHILD);
+        CATCH_ERR;
+
+        Node_t *right = GetP(tokens, index);
+        CATCH_NULL(right);
+
+        status = ConnectNodes(node, right, R_CHILD);
+        CATCH_ERR;
+
+        return node;
+    }
+
+    if (TOKEN_KEYW(KEYW_OPRND))
+    {
+        *index++;
+
+        Node_t *val = GetE(tokens, index);
+        assert(val != nullptr);
+
+        if (Require(tokens, index, KEYW_CLRND)) return nullptr;
+
+        return val;
+    }
+    else
+        return GetF(tokens, index);
+}
+
+// DONE
+Node_t *GetV(Tokens_t *tokens, size_t *index)
+{
+    int status = TokensVerify(tokens);
+    CATCH_ERR;
+    if (index == nullptr) return nullptr;
+
+    Token_t *token = nullptr;
+    status = TokensElem(tokens, *index, &token);
+    CATCH_ERR;
+
+    if (token->type == ID_TYPE)
+    {
+        return GetVar(tokens, index);
+    }
+    else
+    {
+        return GetN(tokens, index);
+    }
+}
+
+// DONE
+Node_t *GetF(Tokens_t *tokens, size_t *index)
+{
+    int status = TokensVerify(tokens);
+    CATCH_ERR;
+    if (index == nullptr) return nullptr;
+
+    Token_t *token = nullptr;
+    status = TokensElem(tokens, *index, &token);
+    CATCH_ERR;
+
+    if (token->type == ID_TYPE)
+    {
+        GET_NEXT_TOKEN;
+        if (!TOKEN_KEYW(KEYW_OPRND))
+        {
+            *index--;
+            return GetV(tokens, index);
+        }
+
+        *index--;
+        Node_t *name   = GetIdentifier(tokens, index);
+        CATCH_NULL(name);
+
+        Node_t *params = GetCallParams(tokens, index);
+        CATCH_NULL(params);
+
+        Node_t *call   = nullptr;
+        status = InitKeyword(&call, KEYW_CALL);
+        CATCH_ERR;
+
+        status = ConnectNodes(call,   name, L_CHILD);
+        CATCH_ERR;
+
+        status = ConnectNodes(call, params, R_CHILD);
+        CATCH_ERR;
+
+        return call;
+    }
+    else
+    {
+        return GetN(tokens, index);
+    }
+}

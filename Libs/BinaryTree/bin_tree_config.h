@@ -8,9 +8,9 @@
 
 enum ValueType
 {
-    ID_TYPE   = 1, // IDENTIFIER
-    NUM_TYPE  = 2, // NUMBER
-    KEYW_TYPE = 3, // KEYWORD
+    ID_TYPE   = 0x1000, // IDENTIFIER
+    NUM_TYPE  = 0x2000, // NUMBER
+    KEYW_TYPE = 0x3000, // KEYWORD
 };
 
 typedef Token_t Value_t;

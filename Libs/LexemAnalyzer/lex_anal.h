@@ -27,5 +27,6 @@ namespace Text
 }
 
 int GetTokens(const char *filename, Tokens_t *tokens);
+int StrEqual (const char *l, const char *r);
 
 #endif // LEX_ANAL_H

@@ -1,0 +1,17 @@
+
+main1 main2
+{
+    scan n;
+    x = fuck(n);
+    print(x);
+}
+
+func fuck(n)
+{
+    if (n <= 1) then
+    {
+        return 1;
+    }
+
+    return n * fuck(n - 1);
+}

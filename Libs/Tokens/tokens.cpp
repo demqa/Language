@@ -76,10 +76,10 @@ int TokensElem    (Tokens_t *tokens, size_t index, Token_t **token)
     int status = TokensVerify(tokens);
     if (status) return status;
 
-    if ( token == nullptr)    return Tokens::TOKEN_IS_NULL;
-    if (*token != nullptr)    return Tokens::TOKEN_DEST_ISNT_NULL;
+    if ( token == nullptr)      return Tokens::TOKEN_IS_NULL;
+    // if (*token != nullptr)      return Tokens::TOKEN_DEST_ISNT_NULL;
 
-    if (index > tokens->size) return Tokens::UNAVAILABLE_ELEM;
+    if ( index >= tokens->size) return Tokens::UNAVAILABLE_ELEM;
 
     *token = tokens->token + index;
 
@@ -97,12 +97,12 @@ int TokensResize  (Tokens_t *tokens)
 
     if (tokens->size <= tokens->capacity / (int) pow(Tokens::CAPACITY_MULTIPLIER, 2))
     {
-        new_capacity = tokens->capacity / Tokens::CAPACITY_MULTIPLIER;
+        new_capacity =  tokens->capacity / Tokens::CAPACITY_MULTIPLIER;
     }
     else
     if (tokens->size == tokens->capacity)
     {
-        new_capacity = tokens->capacity * Tokens::CAPACITY_MULTIPLIER;
+        new_capacity =  tokens->capacity * Tokens::CAPACITY_MULTIPLIER;
     }
     else
         return Tokens::DONT_NEED_RESIZE;

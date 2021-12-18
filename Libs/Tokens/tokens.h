@@ -49,7 +49,7 @@ struct Token_t
     {
         int   key_w;
         double  num;
-        char     id[WORD_MAX_LEN];
+        char     id[WORD_MAX_LEN + 1] = {};
     } arg;
 };
 
@@ -71,13 +71,20 @@ int TokensElem    (Tokens_t *tokens, size_t index, Token_t **token);
 
 enum KeywordCode
 {
-
-#define DEF_KEYWORD(DEF, CODE, WORD) \
+    KEYW_PARAM    = 0x533, // 0x...
+    KEYW_STMT     = 0x544, // 0x57A7
+    KEYW_EOF      = 0x555, // 0xEOF
+    KEYW_DEFINE   = 0x566, // 0xDEF
+    // KEYW_FUNC     = 0x577, // 0xF17C
+    KEYW_CALL     = 0x588, // 0xCA11
+    KEYW_DECISION = 0x599, // 0xDEC15
+    
+#define DEF_KEYW(DEF, CODE, WORD) \
     KEYW_ ## DEF = CODE,
     
     #include "../keywords"
 
-#undef DEF_KEYWORD
+#undef DEF_KEYW
 
 };
 
@@ -85,15 +92,15 @@ enum OperatorCode
 {
 
 #define DEF_OPER(DEF, CODE, SIGN) \
-    OPER_ ## DEF = CODE,
+    KEYW_ ## DEF = CODE,
 
-#define DEF_BRAC(DEF, CODE, BRAC)    \
-    BRAC_ ## DEF = CODE,
+#define DEF_HELP(DEF, CODE, HELP)    \
+    KEYW_ ## DEF = CODE,
 
     #include "../operators"
 
 #undef DEF_OPER
-#undef DEF_BRAC
+#undef DEF_HELP
 
 };
 

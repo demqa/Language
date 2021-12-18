@@ -1,0 +1,27 @@
+func quad(a, b, c)
+{
+    if (a == 0) then
+    {
+        return linear(b, c);
+    }
+
+    d = b * b - 4 * a * c;
+
+    if (d == 0) then
+    {
+        x1 = -b / (2*a);
+        print x1;
+    }
+    else
+    if (d > 0) then
+    {
+        x1 = (-b - d^(1/2))/(2*a);
+        x2 = (-b + d^(1/2))/(2*a);
+        print x1;
+        print x2;
+    }
+    else
+    {
+        print 666;
+    }
+}
