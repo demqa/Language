@@ -22,6 +22,6 @@
 
 #define PRINT_X(num)   do{ fprintf(__OUT__, "[%s:%d] %s = %x\n",  __PRETTY_FUNCTION__, __LINE__, #num, num);          }while(0)
 
-#define PRINT_SM(s, n) do{ fprintf(__OUT__, "[%d] = %.*s\n", __LINE__, n, s);                                         }while(0)
+#define PRINT_SM(s, n) do{ fprintf(__OUT__, "[%s:%d] = %.*s\n",   __PRETTY_FUNCTION__, __LINE__, n, s);                                         }while(0)
 
 #endif // DEBUG_LIB_H

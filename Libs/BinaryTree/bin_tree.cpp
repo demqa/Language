@@ -454,7 +454,8 @@ while(0)
 
 TreeStatus TreeDump(Tree_t *tree)
 {
-    int status = TreeVerify(tree);
+    // int status = TreeVerify(tree);
+    int status = 0;
     if (status)
     {
         fprintf(TREE_LOG_FILE_DEFAULT, "CANT DUMP, TREE IS RUINED\n");

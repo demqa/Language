@@ -51,12 +51,11 @@ namespace ASTree
         INVALID_CONNECTION_NODE = 0x707,
         STREAM_IS_NULL          = 0x708,
         DEAD_TOKEN_TYPE         = 0x709,
-        
+        WRONG_KEYWORD           = 0x70A,
+
     };
 
 }
-
-
 
 #define TOKEN_KEYW(__KEYW__)  (token->type == KEYW_TYPE && token->arg.key_w == (__KEYW__))
 

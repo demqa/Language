@@ -1,5 +1,7 @@
 #include "ast_comp.h"
 
+int InitEmptyNode(Node_t **node_);
+
 int FillTree    (Tree_t *tree, Tokens_t *tokens)
 {
     int status = TreeVerify(tree);
@@ -108,6 +110,7 @@ int InitKeyword(Node_t **node, const int keyword)
 
     Token_t *token = (*node)->value;
 
+    // CHECK THAT KEYWORD IS KEYWORD
     token->type      = KEYW_TYPE;
     token->arg.key_w = keyword;
 
@@ -263,6 +266,28 @@ Node_t *GetGS(Tokens_t *tokens, size_t *index)
     return glob_stmts;
 }
 
+int GetKeyword(Tokens_t *tokens, size_t *index, Node_t **node, const int keyword)
+{
+    int status = TokensVerify(tokens);
+    CATCH_ERR;
+    if (index == nullptr)                     return ASTree::PTR_IS_NULL;
+    if (node  == nullptr || *node == nullptr) return ASTree::NODE_IS_NULL;
+
+    Token_t *token = nullptr;
+    status = TokensElem(tokens, *index, &token);
+    CATCH_ERR;
+
+    if (!TOKEN_KEYW(keyword)) return ASTree::WRONG_KEYWORD;
+
+    Node_t *new_node = nullptr;
+    status = InitKeyword(&new_node, keyword);
+    CATCH_ERR;
+
+    (*index)++;
+
+    return status;
+}
+
 Node_t *GetStmts(Tokens_t *tokens, size_t *index)
 {
     int status = TokensVerify(tokens);
@@ -355,7 +380,6 @@ Node_t *GetCondition(Tokens_t *tokens, size_t *index)
     CATCH_NULL(l_expr);
 
     Node_t *log_op = GetLogOp(tokens, index);
-    TOKEN;
     CATCH_NULL(log_op);
 
     Node_t *r_expr = GetE(tokens, index);
@@ -378,17 +402,9 @@ Node_t *GetWhile(Tokens_t *tokens, size_t *index)
     CATCH_ERR;
     if (index == nullptr) return nullptr;
 
-    Token_t *token = nullptr;
-    status = TokensElem(tokens, *index, &token);
-    CATCH_ERR;
-
-    if (!TOKEN_KEYW(KEYW_WHILE)) return nullptr;
-
     Node_t *while_node = nullptr;
-    status = InitKeyword(&while_node, KEYW_WHILE);
+    status = GetKeyword(tokens, index, &while_node, KEYW_WHILE);
     CATCH_ERR;
-
-    (*index)++;
 
     Node_t *condition = GetCondition(tokens, index);
     CATCH_NULL(condition);
@@ -411,17 +427,9 @@ Node_t *GetIf(Tokens_t *tokens, size_t *index)
     CATCH_ERR;
     if (index == nullptr) return nullptr;
 
-    Token_t *token = nullptr;
-    status = TokensElem(tokens, *index, &token);
-    CATCH_ERR;
-
-    if (!TOKEN_KEYW(KEYW_IF)) return nullptr;
-
     Node_t *if_node = nullptr;
-    status = InitKeyword(&if_node, KEYW_IF);
+    status = GetKeyword(tokens, index, &if_node, KEYW_IF);
     CATCH_ERR;
-
-    (*index)++;
 
     Node_t *condition = GetCondition(tokens, index);
     CATCH_NULL(condition);
@@ -429,6 +437,7 @@ Node_t *GetIf(Tokens_t *tokens, size_t *index)
     status = ConnectNodes(if_node,   condition, L_CHILD);
     CATCH_ERR;
 
+    Token_t *token = nullptr;
     status = TokensElem(tokens, *index, &token);
     CATCH_ERR;
 
@@ -464,6 +473,25 @@ Node_t *GetIf(Tokens_t *tokens, size_t *index)
     CATCH_ERR;
 
     return if_node;
+}
+
+Node_t *GetReturn(Tokens_t *tokens, size_t *index)
+{
+    int status = TokensVerify(tokens);
+    CATCH_ERR;
+    if (index == nullptr) return nullptr;
+
+    Node_t *ret_node = nullptr;
+    status = GetKeyword(tokens, index, &ret_node, KEYW_RETURN);
+    CATCH_ERR;
+    
+    Node_t *expr = GetE(tokens, index);
+    CATCH_NULL(expr);
+
+    status = ConnectNodes(ret_node, expr, R_CHILD);
+    CATCH_ERR;
+
+    return ret_node;
 }
 
 Node_t *GetStmt (Tokens_t *tokens, size_t *index)
@@ -538,8 +566,9 @@ Node_t *GetStmt (Tokens_t *tokens, size_t *index)
         }
         else
         {
-            PRINT(CRINGE);
-            abort();
+            PRINT(UNDEFINED_KEYWORD);
+            TOKEN;
+            return nullptr;
         }
     }
 
@@ -1040,7 +1069,7 @@ int PrintSpaces(FILE *stream, const size_t n_spaces)
     return ASTree::FUNC_IS_OK;
 }
 
-int PoopNodes(const Node_t *node, FILE *stream, const size_t level)
+int PoopNodes(const Node_t *node, FILE *stream /*, size_t *level */)
 {
     if (stream == nullptr) return ASTree::STREAM_IS_NULL;
     int status = NodeVerify(node);
@@ -1057,14 +1086,16 @@ int PoopNodes(const Node_t *node, FILE *stream, const size_t level)
     }
 
     // TODO: fix this cringe...
-    if (TOKEN_KEYW(KEYW_STMT))
-    {
-        fprintf(stream, "\n");
-        status = PrintSpaces(stream, 2 * level);
-        if (status) return status;
-    }
+    // if (TOKEN_KEYW(KEYW_STMT))
+    // {
+    //     fprintf(stderr, "Keyw = %x\n", token->arg.key_w);
+    //     fprintf(stream, "\n");
+    //     status = PrintSpaces(stream, 2 * (*level));
+    //     if (status) return status;
+    //     (*level)++;
+    // }
 
-    if (node->left ) status |= PoopNodes(node->left,  stream, level + 1);
+    if (node->left ) status |= PoopNodes(node->left,  stream /*, level */);
 
     if (token->type == ID_TYPE)
     {
@@ -1111,15 +1142,15 @@ int PoopNodes(const Node_t *node, FILE *stream, const size_t level)
         return ASTree::DEAD_TOKEN_TYPE;
     }
 
-    if (node->right) status |= PoopNodes(node->right, stream, level + 1);
+    if (node->right) status |= PoopNodes(node->right, stream/*, level */);
+
+    // if (TOKEN_KEYW(KEYW_STMT))
+    // {
+    //     (*level)--;
+    // }
 
     fprintf(stream, "}");
-
-    if (TOKEN_KEYW(KEYW_STMT))
-    {
-        fprintf(stream, "\n");
-    }
-
+    
     return status;
 }
 
@@ -1133,10 +1164,87 @@ int PoopTree(const char *filename, Tree_t *tree)
     status = OpenFile(filename, &stream, "w");
     if (status) return status;
 
-    status = PoopNodes(tree->root, stream, 0);
+                                     // size_t level = 0;
+    status = PoopNodes(tree->root, stream /*, &level */);
     if (status) return status;
+
+    fprintf(stream, "\n");
 
     fclose(stream);
 
     return status;
+}
+
+int PrintTokens(Tokens_t *tokens)
+{
+    int status = TokensVerify(tokens);
+    if (status) return status;
+
+    for (size_t index = 0; index < tokens->size; index++)
+        PrintToken(tokens, index);
+    
+    return status;
+}
+
+int PrintToken(Tokens_t *tokens, size_t index)
+{
+    int status = TokensVerify(tokens);
+    if (status) return status;
+
+    Token_t *token = nullptr;
+
+    status = TokensElem(tokens, index, &token);
+    if (status) return status;
+
+    fprintf(stderr, "%lu: ", index);
+
+    if (token == nullptr)
+    {
+        fprintf(stderr, "token is empty(nullptr)\n");
+    }
+    else
+    if (token->type == ID_TYPE)
+    {
+        if (token->arg.id == nullptr)
+            fprintf(stderr, "dead\n");
+        else
+            fprintf(stderr, "\'%s\'\n", token->arg.id);
+    }
+    else
+    if (token->type == NUM_TYPE)
+    {
+        fprintf(stderr, "%lg\n", token->arg.num);
+    }
+    else
+    if (token->type == KEYW_TYPE)
+    {
+        #define DEF_KEYW(DEF, CODE, WORD, FMT)  \
+            case KEYW_ ## DEF:                   \
+                fprintf(stderr, "%s\n", #DEF);    \
+                break;
+
+        #define DEF_OPER(DEF, CODE, SIGN)            \
+            case KEYW_ ## DEF:                        \
+                fprintf(stderr, "%s\n", #SIGN);        \
+                break;
+
+        #define DEF_HELP(DEF, CODE, HELP)                 \
+            case KEYW_ ## DEF:                             \
+                fprintf(stderr, "%c\n", HELP);              \
+                break;
+        
+        switch (token->arg.key_w)
+        {
+            #include "../keywords"
+            #include "../operators"
+
+            default:
+                fprintf(stderr, "dead\n");
+                break;
+        }
+
+        #undef DEF_KEYW
+        #undef DEF_OPER
+        #undef DEF_HELP
+    }
 }

@@ -33,9 +33,8 @@ namespace Text
     };
 }
 
-
 int GetTokens(const char *filename, Tokens_t *tokens);
-int StrEqual (const char *l, const char *r);
+int StrEqual (const char *ptr, const char *reference);
 int OpenFile (const char *filename, FILE **dest_stream, const char *mode);
 
 #endif // LEX_ANAL_H
