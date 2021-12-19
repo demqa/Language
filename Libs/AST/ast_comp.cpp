@@ -27,19 +27,19 @@ int Require     (Tokens_t *tokens, size_t *index, const int symbol)
     {
         fprintf(stderr, "INVALID INPUT FORMAT\nEXPECTED: ");
 
-        #define DEF_KEYW(DEF, CODE, WORD)    \
-            case KEYW_ ## DEF:                \
-                fprintf(stderr, "%s\n", #DEF); \
+        #define DEF_KEYW(DEF, CODE, WORD, FMT) \
+            case KEYW_ ## DEF:                  \
+                fprintf(stderr, "%s\n", #DEF);   \
                 break;
         
-        #define DEF_OPER(DEF, CODE, OPER)         \
-            case KEYW_ ## DEF:                     \
-                fprintf(stderr, "%s\n", #OPER);     \
+        #define DEF_OPER(DEF, CODE, OPER)           \
+            case KEYW_ ## DEF:                       \
+                fprintf(stderr, "%s\n", #OPER);       \
                 break;
 
-        #define DEF_HELP(DEF, CODE, SIGN)              \
-            case KEYW_ ## DEF:                          \
-                fprintf(stderr, "%c\n", SIGN);           \
+        #define DEF_HELP(DEF, CODE, SIGN)                \
+            case KEYW_ ## DEF:                            \
+                fprintf(stderr, "%c\n", SIGN);             \
                 break;
 
         switch (symbol)
@@ -429,6 +429,13 @@ Node_t *GetIf(Tokens_t *tokens, size_t *index)
     status = ConnectNodes(if_node,   condition, L_CHILD);
     CATCH_ERR;
 
+    status = TokensElem(tokens, *index, &token);
+    CATCH_ERR;
+
+    if (!TOKEN_KEYW(KEYW_THEN)) return nullptr;
+
+    (*index)++;
+
     Node_t *decision = nullptr;
     status = InitKeyword(&decision, KEYW_DECISION);
     CATCH_ERR;
@@ -524,6 +531,10 @@ Node_t *GetStmt (Tokens_t *tokens, size_t *index)
         if (TOKEN_KEYW(KEYW_WHILE))
         {
             return GetWhile(tokens, index);
+        }
+        if (TOKEN_KEYW(KEYW_RETURN))
+        {
+            return GetReturn(tokens, index);
         }
         else
         {
@@ -658,7 +669,7 @@ Node_t *GetFuncDef(Tokens_t *tokens, size_t *index)
     status = ConnectNodes(def, stmts, R_CHILD);
     CATCH_ERR;
 
-    TDUMP(def);
+    // TDUMP(def);
     
     return def;
 }
@@ -1018,4 +1029,114 @@ Node_t *GetF(Tokens_t *tokens, size_t *index)
     {
         return GetN(tokens, index);
     }
+}
+
+int PrintSpaces(FILE *stream, const size_t n_spaces)
+{
+    if (stream == nullptr) return ASTree::STREAM_IS_NULL;
+    
+    for (size_t j = 0; j < n_spaces; ++j) fprintf(stream, " ");
+
+    return ASTree::FUNC_IS_OK;
+}
+
+int PoopNodes(const Node_t *node, FILE *stream, const size_t level)
+{
+    if (stream == nullptr) return ASTree::STREAM_IS_NULL;
+    int status = NodeVerify(node);
+    if (status)            return status;
+
+    fprintf(stream, "{");
+
+    Token_t *token = node->value;
+
+    if (token == nullptr)
+    {
+        PRINT(CRINGE);
+        return ASTree::TOKEN_IS_NULL;
+    }
+
+    // TODO: fix this cringe...
+    if (TOKEN_KEYW(KEYW_STMT))
+    {
+        fprintf(stream, "\n");
+        status = PrintSpaces(stream, 2 * level);
+        if (status) return status;
+    }
+
+    if (node->left ) status |= PoopNodes(node->left,  stream, level + 1);
+
+    if (token->type == ID_TYPE)
+    {
+        fprintf(stream, "\'%s\'", token->arg.id);
+    }
+    else
+    if (token->type == NUM_TYPE)
+    {
+        fprintf(stream, "%lg", token->arg.num);
+    }
+    else
+    if (token->type == KEYW_TYPE)
+    {
+        #define DEF_KEYW(DEF, CODE, WORD, FMT) \
+            case KEYW_ ## DEF:                  \
+                fprintf(stream, "%s", #FMT);     \
+                break;
+
+        #define DEF_OPER(DEF, CODE, SIGN)           \
+            case KEYW_ ## DEF:                       \
+                fprintf(stream, "%s", #SIGN);         \
+                break;
+
+        #define DEF_HELP(DEF, CODE, HELP)               
+
+        switch (token->arg.key_w)
+        {
+            #include "../keywords"
+            #include "../operators"
+        
+            default:
+                fprintf(stderr, "INVALID_KEYWORD\n");
+                fprintf(stream, "DEADDEADDEAD\n");
+                break;
+        }
+
+        #undef DEF_KEYW
+        #undef DEF_OPER
+        #undef DEF_HELP
+    }
+    else
+    {
+        PRINT(DEAD_TOKEN_TYPE);
+        return ASTree::DEAD_TOKEN_TYPE;
+    }
+
+    if (node->right) status |= PoopNodes(node->right, stream, level + 1);
+
+    fprintf(stream, "}");
+
+    if (TOKEN_KEYW(KEYW_STMT))
+    {
+        fprintf(stream, "\n");
+    }
+
+    return status;
+}
+
+int PoopTree(const char *filename, Tree_t *tree)
+{
+    if (filename == nullptr) return ASTree::PTR_IS_NULL;
+    int status = TreeVerify(tree);
+    if (status) return status;
+
+    FILE *stream = nullptr;
+    status = OpenFile(filename, &stream, "w");
+    if (status) return status;
+
+    status = PoopNodes(tree->root, stream, 0);
+    if (status) return status;
+
+    fclose(stream);
+
+    return status;
 }

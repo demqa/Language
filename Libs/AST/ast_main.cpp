@@ -20,6 +20,8 @@ int main()
 
     FillTree(tree, tokens);
 
+    PoopTree("Code/ast", tree);
+
     TreeDump(tree);
 
     TokensDtor(tokens);
@@ -76,10 +78,10 @@ int PrintToken(Tokens_t *tokens, size_t index)
     else
     if (token->type == KEYW_TYPE)
     {
-        #define DEF_KEYW(DEF, CODE, WORD)       \
+        #define DEF_KEYW(DEF, CODE, WORD, FMT)  \
             case KEYW_ ## DEF:                   \
                 fprintf(stderr, "%s\n", #DEF);    \
-                break;                             \
+                break;
 
         #define DEF_OPER(DEF, CODE, SIGN)            \
             case KEYW_ ## DEF:                        \

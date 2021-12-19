@@ -345,19 +345,19 @@ static void PrintNode      (const Node_t *node, const size_t *number_of_node, FI
     else
     if (node->value->type == KEYW_TYPE)
     {
-        #define DEF_KEYW(DEF, CODE, WORD)     \
-            case KEYW_ ## DEF:                 \
-                fprintf(dump_file, "%s", #DEF); \
-                break;                           \
-
-        #define DEF_OPER(DEF, CODE, SIGN)          \
-            case KEYW_ ## DEF:                      \
-                fprintf(dump_file, "%s", #SIGN);     \
+        #define DEF_KEYW(DEF, CODE, WORD, FMT) \
+            case KEYW_ ## DEF:                  \
+                fprintf(dump_file, "%s", #DEF);  \
                 break;
 
-        #define DEF_HELP(DEF, CODE, HELP)               \
-            case KEYW_ ## DEF:                           \
-                fprintf(dump_file, "%c", HELP);           \
+        #define DEF_OPER(DEF, CODE, SIGN)           \
+            case KEYW_ ## DEF:                       \
+                fprintf(dump_file, "%s", #SIGN);      \
+                break;
+
+        #define DEF_HELP(DEF, CODE, HELP)                \
+            case KEYW_ ## DEF:                            \
+                fprintf(dump_file, "%c", HELP);            \
                 break;
         
         switch (node->value->arg.key_w)

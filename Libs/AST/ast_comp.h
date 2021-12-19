@@ -13,7 +13,7 @@ int PrintTokens      (Tokens_t *tokens);
 int PrintToken       (Tokens_t *tokens, size_t  index);
 int InitKeyword      (Node_t  **node,                  const int keyword);
 int Require          (Tokens_t *tokens, size_t *index, const int  symbol);
-Node_t *GetToken    (Tokens_t *tokens, size_t *index);
+Node_t *GetToken     (Tokens_t *tokens, size_t *index);
 Node_t *GetVar       (Tokens_t *tokens, size_t *index);
 Node_t *GetFuncDef   (Tokens_t *tokens, size_t *index);
 Node_t *GetFuncParams(Tokens_t *tokens, size_t *index);
@@ -32,6 +32,7 @@ Node_t *GetStmt      (Tokens_t *tokens, size_t *index);
 Node_t *GetStmts     (Tokens_t *tokens, size_t *index);
 Node_t *GetFuncParams(Tokens_t *tokens, size_t *index);
 Node_t *GetCallParams(Tokens_t *tokens, size_t *index);
+int PoopTree(const char *filename, Tree_t *tree);
 
 namespace ASTree
 {
@@ -48,9 +49,14 @@ namespace ASTree
         CHILD_IS_INVALID        = 0x705,
         INVALID_CONNECTION_PAR  = 0x706,
         INVALID_CONNECTION_NODE = 0x707,
+        STREAM_IS_NULL          = 0x708,
+        DEAD_TOKEN_TYPE         = 0x709,
+        
     };
 
 }
+
+
 
 #define TOKEN_KEYW(__KEYW__)  (token->type == KEYW_TYPE && token->arg.key_w == (__KEYW__))
 
@@ -60,9 +66,9 @@ namespace ASTree
     PRINT_S("TOKEN");          \
     PrintToken(tokens, *index); \
 
-#define CATCH_ERR  \
-do                  \
-{                    \
+#define CATCH_ERR   \
+do                   \
+{                     \
     if (status)        \
     {                   \
         PRINT_X(status); \

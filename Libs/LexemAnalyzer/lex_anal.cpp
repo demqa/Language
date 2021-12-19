@@ -49,13 +49,14 @@ int ReadBuffer(char **buffer, FILE   *stream)
     return 0;
 }
 
-int OpenFile  (const char *filename, FILE **dest_stream)
+int OpenFile  (const char *filename, FILE **dest_stream, const char *mode)
 {
     if ( filename    == nullptr) return Text::FILENAME_IS_NULL;
     if ( dest_stream == nullptr) return Text::STREAM_IS_NULL;
     if (*dest_stream != nullptr) return Text::DEST_PTR_IS_NULL;
+    if (        mode == nullptr) return Text::MODE_PTR_IS_NULL;
 
-    FILE *stream = fopen(filename, "r");
+    FILE *stream = fopen(filename, mode);
     if (stream == nullptr)       return Text::CANT_OPEN_FILE;
 
     *dest_stream = stream;
@@ -80,7 +81,7 @@ int StrEqual(const char *ptr, const char *reference)
 
     size_t i = 0;
 
-    for (i = 0; 'while not \0' ; ++i)
+    for (i = 0; 'while not \0'; ++i)
     {
         if (reference[i] == '\0') return i;
 
@@ -99,7 +100,7 @@ int IsKeyword (char *word, int *keyword_code, size_t *length)
         word         == nullptr || 
         length       == nullptr) return Tokens::PTR_IS_NULL;
 
-#define DEF_KEYW(DEF, CODE, WORD)              \
+#define DEF_KEYW(DEF, CODE, WORD, FMT)         \
     if (StrEqual(word, #WORD))                  \
     {                                            \
         *keyword_code = CODE;                     \
@@ -270,7 +271,7 @@ int GetTokens (const char *filename, Tokens_t *tokens)
 
     FILE *stream = nullptr;
 
-    status = OpenFile(filename, &stream);
+    status = OpenFile(filename, &stream, "r");
     if (status) return status;
     
     char *buffer = nullptr;

@@ -27,20 +27,20 @@ const char right_color [COLOR_MAX_LEN] = "#7100c7";
 
 const char colors[]    [COLOR_MAX_LEN] =
 {
-    "#ff002f",
-    "#f6fa00",
-    "#14d4ff",
-    "#00ed14",
-    "#ff8b1f",
+    "#ff8b1f", // orange
+    "#ff002f", // red
+    "#14d4ff", // cyan
+    "#f6fa00", // yellow
+    "#00ed14", // green
 };
 
 const char shapes[]    [SHAPE_MAX_LEN] = 
 {
-    "octagon",
-    "hexagon",
     "invtriangle",
-    "parallelogram",
+    "square",
+    "hexagon",
     "ellipse",
+    "parallelogram",
 };
 
 #endif // BIN_TREE_CONFIG_H

@@ -79,7 +79,7 @@ enum KeywordCode
     // KEYW_CALL     = 0x588, // 0xCA11
     // KEYW_DECISION = 0x599, // 0xDEC15
     
-#define DEF_KEYW(DEF, CODE, WORD) \
+#define DEF_KEYW(DEF, CODE, WORD, FMT) \
     KEYW_ ## DEF = CODE,
     
     #include "../keywords"

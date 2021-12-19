@@ -1,0 +1,20 @@
+{
+{
+  {
+    statement{{{main}function}define{
+        statement{{'x'}={{1}+{{3}*{12}}}}}
+}}
+statement{{'y'}={0}}}
+statement{{{'foo'}function{parameters{'x'}}}define{
+    {
+      {
+        {
+          statement{{'x'}={{12}^{{123}^{123}}}}}
+statement{{'foo'}call{parameters{{{'x'}*{{12}^{{123}^{123}}}}*{{'foo'}call{parameters{123}}}}}}}
+statement{{{'n'}<{1}}while{
+          statement{{'clown'}={123}}}
+}}
+statement{{{{'x'}*{123}}=={23}}if{{
+          statement{{'uebishe'}={0}}}
+decision}}}
+}}

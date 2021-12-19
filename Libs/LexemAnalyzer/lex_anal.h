@@ -22,6 +22,7 @@ namespace Text
         FILENAME_IS_NULL      = 0x304,
         CANT_OPEN_FILE        = 0x305,
         DEST_PTR_IS_NULL      = 0x306,
+        MODE_PTR_IS_NULL      = 0x307,
 
     };
 
@@ -35,5 +36,6 @@ namespace Text
 
 int GetTokens(const char *filename, Tokens_t *tokens);
 int StrEqual (const char *l, const char *r);
+int OpenFile (const char *filename, FILE **dest_stream, const char *mode);
 
 #endif // LEX_ANAL_H
