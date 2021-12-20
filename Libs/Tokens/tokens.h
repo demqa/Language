@@ -12,7 +12,7 @@ namespace Tokens
     enum Errors
     {   
         FUNC_IS_OK                 = 0,
-        BAD_ALLOC                  = 0xBADA110C,
+        BAD_ALLOC                  = 0xBADA110C, // DeAdBeeF 101 4e4
    
         FILENAME_IS_NULL           = 0x400,
         TOKENS_ARE_NULL            = 0x401,
@@ -39,7 +39,9 @@ namespace Tokens
 
 }
 
-const size_t WORD_MAX_LEN = 20;
+
+
+const size_t WORD_MAX_LEN = 20 - 1;
 
 struct Token_t
 {

@@ -17,6 +17,9 @@ bin_tree.o: Libs/BinaryTree/bin_tree.cpp
 
 tokens.o:   Libs/Tokens/tokens.cpp
 	$(CC) $(CFLAGS) Libs/Tokens/tokens.cpp          -o Obj/tokens.o
+list.o:     Libs/List/list.cpp
+	$(CC) $(CFLAGS) Libs/List/list.cpp          -o Obj/list.o
+
 # AST_COMPILING
 ast_comp: ast_main.o ast_comp.o lex_anal.o bin_tree.o tokens.o
 	$(CC) Obj/ast_main.o Obj/ast_comp.o Obj/lex_anal.o Obj/bin_tree.o Obj/tokens.o -o Bin/ast_comp
@@ -29,8 +32,8 @@ ast_comp.o: Libs/AST/ast_comp.cpp
 	$(CC) $(CFLAGS) Libs/AST/ast_comp.cpp           -o Obj/ast_comp.o
 
 # ASM_COMPILING
-asm_comp: asm_main.o asm_comp.o ast_comp.o lex_anal.o bin_tree.o tokens.o
-	$(CC) Obj/asm_main.o Obj/asm_comp.o Obj/ast_comp.o Obj/lex_anal.o Obj/bin_tree.o Obj/tokens.o -o Bin/asm_comp
+asm_comp: asm_main.o asm_comp.o ast_comp.o lex_anal.o bin_tree.o tokens.o list.o
+	$(CC) Obj/asm_main.o Obj/asm_comp.o Obj/ast_comp.o Obj/lex_anal.o Obj/bin_tree.o Obj/tokens.o Obj/list.o -o Bin/asm_comp
 
 
 asm_main.o: Libs/Asm/asm_main.cpp

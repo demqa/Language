@@ -271,7 +271,8 @@ int GetKeyword(Tokens_t *tokens, size_t *index, Node_t **node, const int keyword
     int status = TokensVerify(tokens);
     CATCH_ERR;
     if (index == nullptr)                     return ASTree::PTR_IS_NULL;
-    if (node  == nullptr || *node == nullptr) return ASTree::NODE_IS_NULL;
+    if ( node == nullptr)                     return ASTree::NODE_IS_NULL;
+    if (*node != nullptr)                     return ASTree::DESTPTR_ISNT_NULL;
 
     Token_t *token = nullptr;
     status = TokensElem(tokens, *index, &token);
@@ -284,6 +285,8 @@ int GetKeyword(Tokens_t *tokens, size_t *index, Node_t **node, const int keyword
     CATCH_ERR;
 
     (*index)++;
+
+    *node = new_node;
 
     return status;
 }
@@ -490,6 +493,8 @@ Node_t *GetReturn(Tokens_t *tokens, size_t *index)
 
     status = ConnectNodes(ret_node, expr, R_CHILD);
     CATCH_ERR;
+
+    if (Require(tokens, index, KEYW_DOTPOT)) return nullptr;
 
     return ret_node;
 }

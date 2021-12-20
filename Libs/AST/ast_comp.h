@@ -65,37 +65,37 @@ namespace ASTree
     PRINT_S("TOKEN");          \
     PrintToken(tokens, *index); \
 
-#define CATCH_ERR   \
-do                   \
-{                     \
-    if (status)        \
-    {                   \
-        PRINT_X(status); \
-        return 0;         \
-    }                      \
-}                           \
+#define CATCH_ERR                 \
+do                                 \
+{                                   \
+    if (status)                      \
+    {                                 \
+        PRINT_X(status);               \
+        return 0;                       \
+    }                                    \
+}                                         \
 while (0)
 
-#define CATCH_NULL(PTR)        \
-do                              \
-{                                \
-    if ((PTR) == nullptr)         \
-    {                              \
-        PRINT_PTR(PTR);             \
-        return nullptr;              \
-    }                                 \
+#define CATCH_NULL(PTR)                      \
+do                                            \
+{                                              \
+    if (PTR == nullptr)                         \
+    {                                            \
+        PRINT_PTR(PTR);                           \
+        return nullptr;                            \
+    }                                               \
 } while (0)
 
-#define GET_NEXT_TOKEN                   \
-do                                        \
-{                                          \
-    status = TokensElem(tokens, ++(*index), &token); \
-    CATCH_ERR;                               \
-}                                             \
+#define GET_NEXT_TOKEN                                 \
+do                                                      \
+{                                                        \
+    status = TokensElem(tokens, ++(*index), &token);      \
+    CATCH_ERR;                                             \
+}                                                           \
 while (0)
 
-#define TDUMP(NODE)    \
-    ttree->root = NODE; \
+#define TDUMP(NODE)                                            \
+    ttree->root = NODE;                                         \
     TreeDump(ttree);
 
 #endif // AST_COMP_H

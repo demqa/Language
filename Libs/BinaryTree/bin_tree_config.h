@@ -8,9 +8,9 @@
 
 enum ValueType
 {
-    ID_TYPE   = 0x1000, // IDENTIFIER
-    NUM_TYPE  = 0x2000, // NUMBER
-    KEYW_TYPE = 0x3000, // KEYWORD
+    ID_TYPE   = 0x1111, // IDENTIFIER
+    NUM_TYPE  = 0x2222, // NUMBER
+    KEYW_TYPE = 0x3333, // KEYWORD
 };
 
 typedef Token_t Value_t;
@@ -22,8 +22,13 @@ const Token_t DEAD_ELEM = {300};
 const size_t COLOR_MAX_LEN = 10 + 1;
 const size_t SHAPE_MAX_LEN = 14 + 1;
 
-const char  left_color [COLOR_MAX_LEN] = "#7100c7";
-const char right_color [COLOR_MAX_LEN] = "#7100c7";
+// const char  left_color [COLOR_MAX_LEN] = "#7100c7";
+// const char right_color [COLOR_MAX_LEN] = "#7100c7";
+
+const char  left_color [COLOR_MAX_LEN] = "#46eb34";
+const char right_color [COLOR_MAX_LEN] = "#f01a3a";
+
+// DEBUG:
 
 const char colors[]    [COLOR_MAX_LEN] =
 {

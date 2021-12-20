@@ -8,7 +8,8 @@ y = 0;
 func foo(x)
 {
     x = 12^123^123;
-    foo(x*12^123^123*foo(123));
+    return 1;
+    return popka(134*popka(x));
 
     while ( n < 1 )
     {
