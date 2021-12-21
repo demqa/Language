@@ -1,15 +1,26 @@
 #include "ast_to_lang.h"
 
+size_t SPACES_LEVEL = 0;
+
 int PoopFuncDef(Node_t *node);
 int PoopStmts(Node_t *node);
 int PoopVar(Node_t *node);
 int PoopGlobStmts(Node_t *node);
 
 #define NODE_KEYW(NODE, KEYW) (NODE->value->type == KEYW_TYPE && NODE->value->arg.key_w == KEYW)
-#define NODE_ID(NODE) (NODE->value->type == ID_TYPE)
-#define KEYW(NODE) ((NODE->value->type == KEYW_TYPE) ? NODE->value->arg.key_w : 0)
+#define NODE_ID(NODE)         (NODE->value->type == ID_TYPE)
+#define KEYW(NODE)           ((NODE->value->type == KEYW_TYPE) ? NODE->value->arg.key_w : 0)
 
 static FILE *out = nullptr;
+
+void PoopSpaces(size_t level)
+{
+    if (out == nullptr) return;
+    for (size_t i = 0; i < level; i++)
+    {
+        fprintf(out, "    ");
+    }
+}
 
 int PoopReturn(Node_t *node)
 {
@@ -17,7 +28,9 @@ int PoopReturn(Node_t *node)
     int status = NodeVerify(node);
     CATCH_ERR;
 
-    fprintf(out, "\nFine "); PoopExpr(node->right);  fprintf(out, ";\n");
+    fprintf(out, "\n");
+    PoopSpaces(SPACES_LEVEL);
+    fprintf(out, "Fine "); PoopExpr(node->right);  fprintf(out, ";\n");
 
     return status;
 }
@@ -27,6 +40,8 @@ int PoopPrint(Node_t *node)
     if (out == nullptr) return ASToLang::OUT_STREAM_IS_NULL;
     int status = NodeVerify(node);
     CATCH_ERR;
+
+    PoopSpaces(SPACES_LEVEL);
 
     fprintf(out, "Forte "); PoopExpr(node->right); fprintf(out, ";\n");
 
@@ -38,6 +53,8 @@ int PoopWhile(Node_t *node)
     if (out == nullptr) return ASToLang::OUT_STREAM_IS_NULL;
     int status = NodeVerify(node);
     CATCH_ERR;
+
+    PoopSpaces(SPACES_LEVEL);
 
     fprintf(out, "Repetizione "); PoopCondition(node->left); fprintf(out, "\n");
 
@@ -88,6 +105,8 @@ int PoopIf(Node_t *node)
     int status = NodeVerify(node);
     CATCH_ERR;
 
+    PoopSpaces(SPACES_LEVEL);
+
     fprintf(out, "Piacere "); PoopCondition(node->left); fprintf(out, " Deciso\n");
 
     status = PoopStmts(node->right);
@@ -123,7 +142,10 @@ int PoopStmts(Node_t *node)
     int status = NodeVerify(node);
     CATCH_ERR;
 
+    PoopSpaces(SPACES_LEVEL);
     fprintf(out, "{\n");
+
+    SPACES_LEVEL++;
 
     while (node->left) node = node->left;
 
@@ -135,6 +157,9 @@ int PoopStmts(Node_t *node)
         node = node->parent;
     }
 
+    SPACES_LEVEL--;
+
+    PoopSpaces(SPACES_LEVEL);
     fprintf(out, "}\n");
 
     return status;
@@ -209,13 +234,16 @@ int PoopFuncDef(Node_t *node)
     }
     else
     {
-        fprintf(out, "Opus %s(");
+        fprintf(out, "Opus %s(", node->left->left->value->arg.id);
         status = PoopDefParams(node->right);
         CATCH_ERR;
         fprintf(out, ")\n");
     }
     
+    PoopSpaces(SPACES_LEVEL);
     status = PoopStmts(node->right);
+
+    fprintf(out, "\n");
 
     return status;
 }
@@ -237,6 +265,8 @@ int PoopNum(Node_t *node)
     int status = NodeVerify(node);
     CATCH_ERR;
 
+    assert(node->value->type == NUM_TYPE);
+
     fprintf(out, "%lg", node->value->arg.num);
 
     return status;
@@ -250,11 +280,11 @@ int PoopOper(Node_t *node)
 
     switch (KEYW(node))
     {
-        case KEYW_ADD: fprintf(out, "+");
-        case KEYW_SUB: fprintf(out, "-");
-        case KEYW_MUL: fprintf(out, "*");
-        case KEYW_DIV: fprintf(out, "/");
-        case KEYW_POW: fprintf(out, "^");
+        case KEYW_ADD: fprintf(out, "+"); break;
+        case KEYW_SUB: fprintf(out, "-"); break;
+        case KEYW_MUL: fprintf(out, "*"); break;
+        case KEYW_DIV: fprintf(out, "/"); break;
+        case KEYW_POW: fprintf(out, "^"); break;
         
         default:
             status = ASToLang::NON_OPER_KEYW;
@@ -287,7 +317,7 @@ int PoopExpr(Node_t *node)
         status = PoopOper(node);
         CATCH_ERR;
 
-        status = PoopExpr(node->left);
+        status = PoopExpr(node->right);
         CATCH_ERR;
     }
     else
@@ -300,6 +330,12 @@ int PoopExpr(Node_t *node)
     if (node->value->type == NUM_TYPE)
     {
         status = PoopNum(node);
+        CATCH_ERR;
+    }
+    else
+    if (NODE_KEYW(node, KEYW_ASSIGN))
+    {
+        status = PoopAssign(node);
         CATCH_ERR;
     }
     else
@@ -319,12 +355,13 @@ int PoopAssign(Node_t *node)
     int status = NodeVerify(node);
     CATCH_ERR;
 
+    PoopSpaces(SPACES_LEVEL);
+
     fprintf(out, "%s = ", node->left->value->arg.id);
 
-    PoopExpr(node);
+    PoopExpr(node->right);
 
     fprintf(out, ";\n");
-
 
     return status;
 }
@@ -339,7 +376,7 @@ int PoopGlobStmts(Node_t *node)
     status = NodeVerify(node);
     CATCH_ERR;
 
-    while (node->parent)
+    while (node)
     {
         if (NODE_KEYW(node->right, KEYW_DEFINE))
         {
@@ -369,26 +406,20 @@ int PoopLang(const char *filename, Tree_t *tree)
     if (status) return status;
     if (filename   == nullptr) return ASToLang::FILENAME_IS_NULL;
 
-    PRINT_LINE;
-
     FILE *stream = nullptr;
     status = OpenFile(filename, &stream, "w");
-    if (status) return status;
+    CATCH_ERR;
 
     out = stream;
 
-    PRINT_LINE;
+    TreeDump(tree);
 
     Node_t *GlobalStmts = tree->root;
     status = NodeVerify(GlobalStmts);
     CATCH_ERR;
 
-    PRINT_LINE;
-
     status = PoopGlobStmts(GlobalStmts);
     CATCH_ERR;
-
-    PRINT_LINE;
 
     fclose(stream);
 

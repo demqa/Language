@@ -11,7 +11,8 @@ int main()
 
     PRINT_LINE;
 
-    FillTree("Code/asm", tree);
+    int status = FillTree("Code/ast", tree);
+    PRINT_X(status);
 
     PRINT_LINE;
 

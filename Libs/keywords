@@ -16,7 +16,7 @@ DEF_KEYW(DECR,     0x50B, decr,        dead) // Diminuendo — постепен�
 // DEF_KEYW(CLFIG,    0x50D, CLFIG ) // Rallentando раллентандо — замедляя
 DEF_KEYW(PRINT,    0x50E, Forte,       print) // Forte форте — сильно, громко
 DEF_KEYW(SCAN,     0x50F, scan,        scan) // Marcato маркато — четко, подчеркнуто
-DEF_KEYW(PARAM,    0x533, 666,         parameters) // 0x...
+DEF_KEYW(PARAM,    0x533, 666,         parameter) // 0x...
 DEF_KEYW(STMT,     0x544, 666,         statement) // 0x57A7
 DEF_KEYW(EOF,      0x555, 666,         dead) // 0xEOF
 DEF_KEYW(DEFINE,   0x566, 666,         define) // 0xDEF

@@ -82,6 +82,7 @@ int GetKeyword(char **ptr, Node_t *node)
     #include "../operators"
  /* else */
     {
+        PRINT_SM(*ptr, 10);
         return ASMcmp::UNDEFINED_KEYWORD;
     }
 
