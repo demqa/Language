@@ -43,7 +43,16 @@ namespace ASMcmp
         CANT_USE_FUNC_IN_GLOBAL    = 0x81C,
         UNDEFINED_OPERATOR         = 0x81D,
         REPEATING_MAIN             = 0x81E,
-        
+        CANT_USE_NON_ID_LIKE_MARK  = 0x81F,
+        NAMETABLE_ISNT_CLEAR       = 0x820,
+        VARIABLE_IS_ENGAGED        = 0x821,
+        NO_MAIN_IN_PROGRAM         = 0x822,
+        UNEXPECTED_MATH_OPER       = 0x823,
+        PRINT_DOESNT_HAVE_ARG      = 0x824,
+        NOT_LOG_OPER               = 0x825,
+        PARAM_ISNT_PARAM           = 0x826,
+        PARAM_ISNT_THE_ONLY        = 0x827,
+        NO_PARAMS                  = 0x828,
 
     };
 

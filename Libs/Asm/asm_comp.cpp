@@ -2,7 +2,7 @@
 
 #define NODE_KEYW(NODE, KEYW) (NODE->value->type == KEYW_TYPE && NODE->value->arg.key_w == KEYW)
 #define NODE_ID(NODE) (NODE->value->type == ID_TYPE)
-#define KEYW(NODE) ((node->value->type == KEYW_TYPE) ? node->value->arg.key_w : 0)
+#define KEYW(NODE) ((NODE->value->type == KEYW_TYPE) ? NODE->value->arg.key_w : 0)
 
 #define CHECK_NODES_N_LISTS       \
     int status = NodeVerify(node); \
@@ -242,7 +242,7 @@ int FillTree(const char *filename, Tree_t *tree)
     return status;
 }
 
-
+// DONE
 int PushInNametable(Node_t *node, List_t *NT)
 {
     int status = NodeVerify(node);
@@ -263,6 +263,7 @@ int PushInNametable(Node_t *node, List_t *NT)
     return status;
 }
 
+// DONE
 int IndexNametable(Node_t *node, List_t *NT, size_t *index)
 {
     int status = NodeVerify(node);
@@ -307,7 +308,7 @@ int SearchInNametable(Node_t *node, List_t *NT)
     return ASMcmp::FUNC_IS_OK;
 }
 
-static FILE *out         = nullptr;
+static FILE   *out       = nullptr;
 static Node_t *node_main = nullptr;
 
 int GenerateScan(Node_t *node, List_t *NT, List_t *GlobalNT)
@@ -319,11 +320,18 @@ int GenerateScan(Node_t *node, List_t *NT, List_t *GlobalNT)
     return status;
 }
 
+// DONE
 int GeneratePrint(Node_t *node, List_t *NT, List_t *GlobalNT)
 {
     CHECK_NODES_N_LISTS;
 
-    PRINT_(NOT_IMPLEMENTED);
+    if (node->right == nullptr) return ASMcmp::PRINT_DOESNT_HAVE_ARG;
+
+    status = GenerateExpr(node->right, NT, GlobalNT);
+    CATCH_ERR;
+
+    fprintf(out, "OUT   \n");
+    fprintf(out, "POP dx\n");
 
     return status;
 }
@@ -350,6 +358,7 @@ int GenerateAssign(Node_t *node, List_t *NT, List_t *GlobalNT)
     return status;
 }
 
+// DONE
 int GenerateStmt  (Node_t *node, List_t *NT, List_t *GlobalNT)
 {
     CHECK_NODES_N_LISTS;
@@ -373,11 +382,12 @@ int GenerateStmt  (Node_t *node, List_t *NT, List_t *GlobalNT)
     return status;
 }
 
+// DONE
 int GenerateStmts (Node_t *node, List_t *NT, List_t *GlobalNT)
 {
     CHECK_NODES_N_LISTS;
 
-    if (KEYW(node) != KEYW_STMT) return ASMcmp::INVALID_STMT;
+    if (NODE_KEYW(node, KEYW_STMT)) return ASMcmp::INVALID_STMT;
 
     while (node->left) node = node->left;
 
@@ -389,11 +399,10 @@ int GenerateStmts (Node_t *node, List_t *NT, List_t *GlobalNT)
         node = node->parent;
     }
 
-    PRINT_(NOT_IMPLEMENTED);
-
     return status;
 }
 
+// DONE
 int IsNum(Node_t *node, int *ans)
 {
     int status = NodeVerify(node);
@@ -405,6 +414,7 @@ int IsNum(Node_t *node, int *ans)
     return status;
 }
 
+// DONE
 int IsVar(Node_t *node, int *ans)
 {
     int status = NodeVerify(node);
@@ -416,6 +426,7 @@ int IsVar(Node_t *node, int *ans)
     return status;
 }
 
+// DONE
 int IsMathOper(Node_t *node, int *ans)
 {
     int status = NodeVerify(node);
@@ -427,6 +438,7 @@ int IsMathOper(Node_t *node, int *ans)
     return status;
 }
 
+// DONE
 int IsLogOper(Node_t *node, int *ans)
 {
     int status = NodeVerify(node);
@@ -438,17 +450,32 @@ int IsLogOper(Node_t *node, int *ans)
     return status;
 }
 
+// DONE
 int GenerateMathOper(Node_t *node)
 {
+    if (out = nullptr) return ASMcmp::OUT_STREAM_IS_NULL;
     int status = NodeVerify(node);
     CATCH_ERR;
-    if (out = nullptr) return ASMcmp::OUT_STREAM_IS_NULL;
 
     int is_math_oper = 0;
     status = IsMathOper(node, &is_math_oper);
     CATCH_ERR;
 
-    PRINT_(NOT_IMPLEMENTED);
+    switch (KEYW(node))
+    {
+        case KEYW_ADD: fprintf(out, "ADD\n"); break;
+        case KEYW_SUB: fprintf(out, "SUB\n"); break;
+        case KEYW_MUL: fprintf(out, "MUL\n"); break;
+        case KEYW_DIV: fprintf(out, "DIV\n"); break;
+
+        // TODO: fix. cpu doesnt allow this now.
+        case KEYW_POW: fprintf(out, "POW\n"); break;
+        
+        default:
+            status = ASMcmp::UNEXPECTED_MATH_OPER;
+            CATCH_ERR;
+            break;
+    }
 
     return status;
 }
@@ -585,30 +612,123 @@ int GenerateExpr  (Node_t *node, List_t *NT, List_t *GlobalNT)
     CATCH_ERR;
 }
 
-int GenerateCall(Node_t *node, List_t *NT, List_t *GlobalNT)
+// DONE
+int GenerateCallParams(Node_t *node, List_t *NT, List_t *GlobalNT, size_t *num_of_params)
 {
     CHECK_NODES_N_LISTS;
+    if (num_of_params == nullptr) return ASMcmp::PTR_IS_NULL;
 
-    PRINT_(NOT_IMPLEMENTED);
+    if (!NODE_KEYW(node, KEYW_PARAM))
+    {
+        status = ASMcmp::PARAM_ISNT_PARAM;
+        CATCH_ERR;
+    }
+
+    if (node->left != nullptr)
+    {
+        PRINT_(NOT_IMPLEMENTED);
+        status = ASMcmp::PARAM_ISNT_THE_ONLY;
+        CATCH_ERR;
+    }
+
+    // TODO:
+    // rewrite if I want more than one arguement
+    assert(*num_of_params == 0);
+
+    (*num_of_params)++;
+
+    status = GenerateExpr(node->right, NT, GlobalNT);
+    CATCH_ERR;
+    
+    fprintf(out, "POP [bx+1]\n");
 
     return status;
 }
 
+
+int GenerateCall(Node_t *node, List_t *NT, List_t *GlobalNT)
+{
+    CHECK_NODES_N_LISTS;
+
+    Node_t *params = node->right;
+    if (params == nullptr)
+    {
+        PRINT_(NOT_IMPLEMENTED);
+        status = ASMcmp::NO_PARAMS;
+        CATCH_ERR;
+    }
+
+    size_t num_of_params = 0;
+
+    status = GenerateCallParams(params, NT, GlobalNT, &num_of_params);
+    CATCH_ERR;
+
+    // TODO:
+    // increase number of params to inf
+    assert(num_of_params == 1);
+
+    status = IncreaseBX(num_of_params);
+    CATCH_ERR;
+
+    fprintf(out, "CALL %s:\n");
+
+    status = DecreaseBX(num_of_params);
+    CATCH_ERR;
+
+    fprintf(out, "PUSH cx\n");
+
+    return status;
+}
+
+// DONE
 int GenerateJump(Node_t *node, List_t *NT, List_t *GlobalNT, const char *mark, const int num)
 {
     CHECK_NODES_N_LISTS;
     if (mark == nullptr) return ASMcmp::PTR_IS_NULL;
 
-    PRINT_(NOT_IMPLEMENTED);
+    int is_log_op = 0;
+    status = IsLogOper(node, &is_log_op);
+    CATCH_ERR;
+
+    if (!is_log_op)
+    {
+        status = ASMcmp::NOT_LOG_OPER;
+        CATCH_ERR;
+    }
+
+    switch (KEYW(node))
+    {
+        case KEYW_LESS:      fprintf(out, "JAE"); break;
+        case KEYW_LESSOREQ:  fprintf(out, "JA" ); break;
+        case KEYW_NOTEQUAL:  fprintf(out, "JE" ); break;
+        case KEYW_EQUAL:     fprintf(out, "JNE"); break;
+        case KEYW_GREATOREQ: fprintf(out, "JB" ); break;
+        case KEYW_GREAT:     fprintf(out, "JBE"); break;
+        
+        default:
+            status = ASMcmp::UNDEFINED_OPERATOR;
+            CATCH_ERR;
+            break;
+    }
+
+    fprintf(out, " %s_%d:\n", mark, num);
 
     return status;
 }
 
-int GenerateCond(Node_t *node, List_t *NT, List_t *GlobalNT)
+// DONE
+int GenerateCond(Node_t *node, List_t *NT, List_t *GlobalNT, const char *mark, const int num)
 {
     CHECK_NODES_N_LISTS;
 
-    PRINT_(NOT_IMPLEMENTED);
+    status = GenerateExpr(node->left,  NT, GlobalNT);
+    CATCH_ERR;
+
+    status = GenerateExpr(node->right, NT, GlobalNT);
+    CATCH_ERR;
+
+    status = GenerateJump(node, NT, GlobalNT, mark, num);
+    CATCH_ERR;
 
     return status;
 }
@@ -616,11 +736,53 @@ int GenerateCond(Node_t *node, List_t *NT, List_t *GlobalNT)
 static size_t __IF_COUNTER__    = 0;
 static size_t __WHILE_COUNTER__ = 0;
 
+// DONE
 int GenerateIf(Node_t *node, List_t *NT, List_t *GlobalNT)
 {
     CHECK_NODES_N_LISTS;
 
-    PRINT_(NOT_IMPLEMENTED);
+    Node_t *decision   = node->right;
+    CATCH_NULL(decision);
+
+    Node_t *condition  = node->left;
+    CATCH_NULL(condition);
+
+    Node_t *if_stmts   = condition->left;
+    CATCH_NULL(if_stmts);
+
+    Node_t *else_stmts = decision->right;
+
+    int counter = __IF_COUNTER__++;
+
+    if (else_stmts)
+    {
+        status = GenerateCond(condition, NT, GlobalNT, "ELSE", counter);
+        CATCH_ERR;
+
+        status = GenerateStmts(if_stmts, NT, GlobalNT);
+        CATCH_ERR;
+
+        fprintf(out, "JMP END_IF_%d:\n", counter);
+
+        fprintf(out, "ELSE_%d:\n", counter);
+
+        status = GenerateStmts(else_stmts, NT, GlobalNT);
+        CATCH_ERR;
+
+        // fprintf(out, "JMP END_IF_%d:\n", counter);
+    }
+    else
+    {
+        status = GenerateCond(condition, NT, GlobalNT, "END_IF", __IF_COUNTER__++);
+        CATCH_ERR;
+
+        status = GenerateStmts(if_stmts, NT, GlobalNT);
+        CATCH_ERR;
+
+        // fprintf(out, "JMP END_IF_%d:\n", counter);
+    }
+
+    fprintf(out, "END_IF_%d:\n", counter);
 
     return status;
 }
@@ -629,25 +791,136 @@ int GenerateReturn(Node_t *node, List_t *NT, List_t *GlobalNT)
 {
     CHECK_NODES_N_LISTS;
 
+
+
     PRINT_(NOT_IMPLEMENTED);
 
     return status;
 }
 
+
+// DONE
 int GenerateWhile(Node_t *node, List_t *NT, List_t *GlobalNT)
 {
     CHECK_NODES_N_LISTS;
 
-    PRINT_(NOT_IMPLEMENTED);
+    Node_t *condition = node->left;
+    CATCH_NULL(condition);
+
+    Node_t *while_stmts = node->right;
+    CATCH_NULL(while_stmts);
+
+    int counter = __WHILE_COUNTER__++;
+
+    fprintf(out, "WHILE_%d:\n", counter);
+
+    status = GenerateCond(condition, NT, GlobalNT, "END_WHILE", counter);
+    CATCH_ERR;
+
+    status = GenerateStmts(while_stmts, NT, GlobalNT);
+    CATCH_ERR;
+
+    fprintf(out, "JMP WHILE_%d:\n", counter);
+
+    fprintf(out, "END_WHILE_%d:\n", counter);
 
     return status;
 }
 
+// DONE
+int GenerateDefParams(Node_t *node, List_t *NT, List_t *GlobalNT, size_t *free_memory_index)
+{
+    CHECK_NODES_N_LISTS;
+    if (free_memory_index == nullptr) return ASMcmp::PTR_IS_NULL;
+
+    if (NT->size != 0)                return ASMcmp::NAMETABLE_ISNT_CLEAR;
+
+    if (node->left)
+    {
+        PRINT_(NOT_IMPLEMENTED);
+
+        return status;
+    }
+    else
+    {
+        *free_memory_index = 1;
+
+        status = SearchInNametable(node->right, GlobalNT);
+        if (status == ASMcmp::VARIABLE_FOUND) status = ASMcmp::VARIABLE_IS_ENGAGED;
+        CATCH_ERR;
+
+        status = PushInNametable(node->right, NT);
+        CATCH_ERR;
+    }
+
+    return status;
+}
+
+// DONE
+int IncreaseBX(const size_t number)
+{
+    if (out == nullptr) return ASMcmp::OUT_STREAM_IS_NULL;
+
+    fprintf(out, "        \n");
+    fprintf(out, "PUSH bx \n");
+    fprintf(out, "PUSH %lu\n", number);
+    fprintf(out, "ADD     \n");
+    fprintf(out, "POP  bx \n");
+    fprintf(out, "        \n");
+
+    return ASMcmp::FUNC_IS_OK;
+}
+
+// DONE
+int DecreaseBX(const size_t number)
+{
+    if (out == nullptr) return ASMcmp::OUT_STREAM_IS_NULL;
+
+    fprintf(out, "        \n");
+    fprintf(out, "PUSH bx \n");
+    fprintf(out, "PUSH %lu\n", number);
+    fprintf(out, "SUB     \n");
+    fprintf(out, "POP  bx \n");
+    fprintf(out, "        \n");
+
+    return ASMcmp::FUNC_IS_OK;
+}
+
+// DONE
+int GenerateMark(Node_t *mark)
+{
+    if (out == nullptr) return ASMcmp::OUT_STREAM_IS_NULL;
+    int status = NodeVerify(mark);
+    CATCH_ERR;
+
+    if (mark->value->type != ID_TYPE && KEYW(mark) != KEYW_MAIN1)
+    {
+        status = ASMcmp::CANT_USE_NON_ID_LIKE_MARK;
+        CATCH_ERR;
+    }
+
+    if (KEYW(mark) == KEYW_MAIN1)
+    {
+        fprintf(out, "  main:\n");
+    }
+    else
+    {
+        fprintf(out, "  %s:\n", mark->value->arg.id);
+    }
+
+    return status;
+}
+
+// DONE
 int GenerateFuncDef(Node_t *node, List_t *NT, List_t *GlobalNT)
 {
     CHECK_NODES_N_LISTS;
 
-    size_t free_memory = 0;
+    if (NT->size != 0)
+    {
+        status = ASMcmp::NAMETABLE_ISNT_CLEAR;
+        CATCH_ERR;
+    }
 
     Node_t *func   = node->left;
     CATCH_NULL(func);
@@ -671,21 +944,61 @@ int GenerateFuncDef(Node_t *node, List_t *NT, List_t *GlobalNT)
 
     Node_t *params = func->right;
 
+    size_t free_memory_index = 0;
+
     if (params)
     {
-        status = GenerateParams(params, NT, GlobalNT);
+        status = GenerateDefParams(params, NT, GlobalNT, &free_memory_index);
         CATCH_ERR;
     }
-
 
     status = GenerateMark(mark);
     CATCH_ERR;
 
-    PRINT_(NOT_IMPLEMENTED);
+    Node_t *stmts  = node->right;
+    CATCH_NULL(stmts);
 
-    // fprintf(stream, "%s:\n", mark->value->arg.id);
+    // bx += free_memory_index
+    status = IncreaseBX(free_memory_index);
+    CATCH_ERR;
 
-    // while params: POP
+    status = GenerateStmts(stmts, NT, GlobalNT);
+    CATCH_ERR;
+
+    status = ListClear(NT);
+    CATCH_ERR;
+
+#ifdef DEBUG_LIB_H
+    fprintf(out, "\n\n\n");
+#endif
+
+    return status;
+}
+
+// DONE
+int GenerateMain(Node_t *node, List_t *NT, List_t *GlobalNT)
+{
+    CHECK_NODES_N_LISTS;
+
+    if (NT->size != 0)
+    {
+        status = ASMcmp::NAMETABLE_ISNT_CLEAR;
+        CATCH_ERR;
+    }
+
+    if (node_main == nullptr) return ASMcmp::NO_MAIN_IN_PROGRAM;
+
+    status = GenerateMark(node);
+    CATCH_ERR;
+
+    Node_t *stmts  = node->right;
+    CATCH_NULL(stmts);
+
+    status = GenerateStmts(stmts, NT, GlobalNT);
+    CATCH_ERR;
+
+    status = ListClear(NT);
+    CATCH_ERR;
 
     return status;
 }
@@ -812,6 +1125,7 @@ int InitGlobVar(Node_t *node, List_t *GlobalNT)
     return status;
 }
 
+// DONE
 int GenerateGS(Node_t *node, List_t *GlobalNT)
 {
     if (out == nullptr) return ASMcmp::OUT_STREAM_IS_NULL;
@@ -822,11 +1136,15 @@ int GenerateGS(Node_t *node, List_t *GlobalNT)
 
     if (!NODE_KEYW(node, KEYW_STMT)) return ASMcmp::GLOBAL_STMTS_ARE_NOT_STMTS;
 
-    // IM AT BOTTOM STMT
+    fprintf(out, "CALL main:\n");
+    fprintf(out, "HLT       \n");
+
     while (node->left) node = node->left;
+    // IM AT BOTTOM STMT
     
     Node_t *bottom = node;
 
+    // Processing global variables
     while (node)
     {
         if (KEYW(node->right) == KEYW_ASSIGN)
@@ -838,16 +1156,8 @@ int GenerateGS(Node_t *node, List_t *GlobalNT)
     }
 
     // bx += (GlobalNT)->size;
-    #ifdef DEBUG_LIB_H
-        fprintf(out, "\n");
-    #endif
-    fprintf(out, "PUSH bx \n");
-    fprintf(out, "PUSH %lu\n", GlobalNT->size);
-    fprintf(out, "ADD     \n");
-    fprintf(out, "POP bx  \n");
-    #ifdef DEBUG_LIB_H
-        fprintf(out, "\n");
-    #endif
+    status = IncreaseBX(GlobalNT->size);
+    CATCH_ERR;
 
     List_t *NT = (List_t *) calloc(1, sizeof(List_t));
     if (NT == nullptr) return ASMcmp::BAD_ALLOC;
@@ -856,14 +1166,13 @@ int GenerateGS(Node_t *node, List_t *GlobalNT)
     CATCH_ERR;
 
     node = bottom;
+
     // IM AT BOTTOM STMT
     while (node != nullptr)
     {
         if (NODE_KEYW(node->right, KEYW_DEFINE))
         {
             status = GenerateFuncDef(node->right, NT, GlobalNT);
-            CATCH_ERR;
-            status = ListClear(NT);
             CATCH_ERR;
         }
         else
@@ -892,6 +1201,7 @@ int GenerateGS(Node_t *node, List_t *GlobalNT)
     return status;
 }
 
+// DONE
 int GenerateASM(const char *filename, Tree_t *tree)
 {
     int status = TreeVerify(tree);
