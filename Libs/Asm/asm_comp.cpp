@@ -351,7 +351,7 @@ int GenerateAssign(Node_t *node, List_t *NT, List_t *GlobalNT)
     }
     else
     {
-        status = EvalVar(node, NT, GlobalNT);
+        status = InitVar(node, NT, GlobalNT);
         CATCH_ERR;
     }
 
@@ -533,34 +533,34 @@ int InitVar(Node_t *node, List_t *NT, List_t *GlobalNT)
     return status;
 }
 
-// DONE
-int EvalVar(Node_t *node, List_t *NT, List_t *GlobalNT)
-{
-    CHECK_NODES_N_LISTS;
+// // DONE
+// int EvalVar(Node_t *node, List_t *NT, List_t *GlobalNT)
+// {
+//     CHECK_NODES_N_LISTS;
 
-    status = SearchInNametable(node->left, NT);
-    if (status == ASMcmp::VARIABLE_FOUND)
-    {
-        status = GenerateExpr(node->right, NT, GlobalNT);
-        CATCH_ERR;
+//     status = SearchInNametable(node->left, NT);
+//     if (status == ASMcmp::VARIABLE_FOUND)
+//     {
+//         status = GenerateExpr(node->right, NT, GlobalNT);
+//         CATCH_ERR;
 
-        size_t index = 0;
+//         size_t index = 0;
 
-        status = IndexNametable(node->left, NT, &index);
-        CATCH_ERR;
+//         status = IndexNametable(node->left, NT, &index);
+//         CATCH_ERR;
 
-        fprintf(out, "POP [bx+%lu]\n", index);
-    }
-    else
-    {
-        CATCH_ERR;
+//         fprintf(out, "POP [bx+%lu]\n", index);
+//     }
+//     else
+//     {
+//         CATCH_ERR;
 
-        status = InitVar(node, NT, GlobalNT);
-        CATCH_ERR;
-    }
+//         status = InitVar(node, NT, GlobalNT);
+//         CATCH_ERR;
+//     }
 
-    return status;
-}
+//     return status;
+// }
 
 // DONE
 int GenerateVar(Node_t *node, List_t *NT, List_t *GlobalNT)
