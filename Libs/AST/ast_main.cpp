@@ -22,7 +22,7 @@ int main()
 
     PoopTree("Code/ast", tree);
 
-    // TreeDump(tree);
+    TreeDump(tree);
 
     TokensDtor(tokens);
     TreeDtor(tree);

@@ -34,17 +34,31 @@ ADD
 POP bx
 
 main:
-PUSH 171
+PUSH 4
 POP [bx+0]
+WHILE_0:
+PUSH [bx+0]
+PUSH 8
+JAE END_WHILE_0:
+DUMP
 PUSH [bx+0]
 POP [bx+1]
 
 CALL FUCK:
 PUSH cx
-POP [bx+1]
-PUSH [bx+1]
 OUT
 POP dx
-PUSH [bx+1]
+PUSH [bx+0]
+PUSH 1
+ADD
+POP [bx+0]
+PUSH [bx+0]
+PUSH 1
+ADD
+POP [bx+0]
+DUMP
+JMP WHILE_0:
+END_WHILE_0:
+PUSH 0
 POP cx
 RET

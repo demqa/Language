@@ -381,12 +381,15 @@ Node_t *GetCondition(Tokens_t *tokens, size_t *index)
 
     Node_t *l_expr = GetE(tokens, index);
     CATCH_NULL(l_expr);
+    PRINT_LINE;
 
     Node_t *log_op = GetLogOp(tokens, index);
     CATCH_NULL(log_op);
+    PRINT_LINE;
 
     Node_t *r_expr = GetE(tokens, index);
     CATCH_NULL(r_expr);
+    PRINT_LINE;
 
     status = ConnectNodes(log_op, l_expr, L_CHILD);
     CATCH_ERR;
@@ -411,6 +414,8 @@ Node_t *GetWhile(Tokens_t *tokens, size_t *index)
 
     Node_t *condition = GetCondition(tokens, index);
     CATCH_NULL(condition);
+
+    PRINT_LINE;
 
     status = ConnectNodes(while_node,  condition, L_CHILD);
     CATCH_ERR;
@@ -1058,15 +1063,20 @@ Node_t *GetF(Tokens_t *tokens, size_t *index)
     status = TokensElem(tokens, *index, &token);
     CATCH_ERR;
 
+    PRINT_LINE;
+
     if (token->type == ID_TYPE)
     {
+        PRINT_LINE;
         GET_NEXT_TOKEN;
         if (!TOKEN_KEYW(KEYW_OPRND))
         {
+            PRINT_LINE;
             (*index)--;
             return GetV(tokens, index);
         }
-
+        PRINT_LINE;
+        
         (*index)--;
         Node_t *name   = GetIdentifier(tokens, index);
         CATCH_NULL(name);

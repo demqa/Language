@@ -386,6 +386,7 @@ int GenerateStmt  (Node_t *node, List_t *NT, List_t *GlobalNT)
     }
 
     CATCH_ERR;
+    return status;
 }
 
 // DONE
@@ -494,7 +495,7 @@ int GenerateNum(Node_t *node)
     CATCH_ERR;
 
     fprintf(out, "PUSH %lg\n", node->value->arg.num);
-    fprintf(stderr, "PUSH %lg\n", node->value->arg.num);
+    // fprintf(stderr, "PUSH %lg\n", node->value->arg.num);
 
     return status;
 }
@@ -509,7 +510,26 @@ int InitVar(Node_t *node, List_t *NT, List_t *GlobalNT)
     CATCH_ERR;
 
     status = SearchInNametable(node->left, NT);
-    if (status == ASMcmp::VARIABLE_FOUND) status = ASMcmp::REPEATING_VARIABLE;
+    if (status == ASMcmp::VARIABLE_FOUND) 
+    {
+        status = GenerateExpr(node->right, NT, GlobalNT);
+        CATCH_ERR;
+
+        size_t index = 0;
+        status = IndexNametable(node->left, NT, &index);
+        CATCH_ERR;
+
+        assert(index >= 1);
+
+        fprintf(out, "POP [bx+%lu]\n", index - 1);
+
+        status = ASMcmp::FUNC_IS_OK;
+
+        CATCH_ERR;
+
+        // return status;
+    }
+    
     CATCH_ERR;
 
     status = PushInNametable(node->left, NT);
@@ -524,8 +544,10 @@ int InitVar(Node_t *node, List_t *NT, List_t *GlobalNT)
     status = GenerateExpr(node->right, NT, GlobalNT);
     CATCH_ERR;
 
+    // fprintf(out, "PUSH 0\n");
+
     fprintf(out, "POP [bx+%lu]\n", index - 1);
-    fprintf(stderr, "POP [bx+%lu]\n", index - 1);
+    // fprintf(stderr, "POP [bx+%lu]\n", index - 1);
 
     return status;
 }
@@ -551,7 +573,7 @@ int GenerateVar(Node_t *node, List_t *NT, List_t *GlobalNT)
         CATCH_ERR;
 
         fprintf(out, "PUSH [bx+%lu]\n", index - 1);
-        fprintf(stderr, "PUSH [bx+%lu]\n", index - 1);
+        // fprintf(stderr, "PUSH [bx+%lu]\n", index - 1);
 
         return status;
     }
@@ -560,6 +582,8 @@ int GenerateVar(Node_t *node, List_t *NT, List_t *GlobalNT)
 
     status = ASMcmp::VARIABLE_NOT_FOUND;
     CATCH_ERR;
+
+    return status;
 }
 
 // DONE
@@ -620,6 +644,8 @@ int GenerateExpr  (Node_t *node, List_t *NT, List_t *GlobalNT)
 
     status = ASMcmp::UNDEFINED_OPERATOR;
     CATCH_ERR;
+
+    return status;
 }
 
 // DONE
@@ -651,7 +677,7 @@ int InitCallParams(Node_t *node, List_t *NT, List_t *GlobalNT, size_t *num_of_pa
     CATCH_ERR;
 
     fprintf(out, "POP [bx+%d]\n", *num_of_params);
-    fprintf(stderr, "POP [bx+1]\n");
+    // fprintf(stderr, "POP [bx+1]\n");
 
     return status;
 }
@@ -833,8 +859,18 @@ int GenerateWhile(Node_t *node, List_t *NT, List_t *GlobalNT)
     status = GenerateCond(condition, NT, GlobalNT, "END_WHILE", counter);
     CATCH_ERR;
 
+    fprintf(out, "DUMP\n");
+
+    Tree_t tree = {};
+
+    tree.root = while_stmts;
+
+    TreeDump(&tree);
+
     status = GenerateStmts(while_stmts, NT, GlobalNT);
     CATCH_ERR;
+
+    fprintf(out, "DUMP\n");
 
     fprintf(out, "JMP WHILE_%d:\n", counter);
 
@@ -1064,6 +1100,8 @@ int GenerateGlobVar(Node_t *node, List_t *GlobalNT)
 
     status = ASMcmp::VARIABLE_NOT_FOUND;
     CATCH_ERR;
+
+    return status;
 }
 
 // DONE
@@ -1128,6 +1166,8 @@ int GenerateGlobExpr(Node_t *node, List_t *GlobalNT)
 
     status = ASMcmp::UNDEFINED_OPERATOR;
     CATCH_ERR;
+
+    return status;
 }
 
 // DONE
@@ -1231,6 +1271,8 @@ int GenerateGS(Node_t *node, List_t *GlobalNT)
     free(NT);
 
     CATCH_ERR;
+
+    return status;
 }
 
 // DONE

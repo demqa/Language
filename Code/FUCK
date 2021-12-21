@@ -1,0 +1,12 @@
+main1 main2
+{
+    y = 5;
+
+    while (y < 10)
+    {
+        print y;
+        y = y + 1;
+    }    
+
+    return 0;
+}

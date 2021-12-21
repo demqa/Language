@@ -1,20 +1,12 @@
-main1 main2
+Danse Macabre
 {
-    y = 16;
+    y = 4;
 
-    z = FUCK(y);
-
-    print z;
-
-    return z;
-}
-
-func FUCK(x)
-{
-    if (x <= 1) then
+    Repetizione (y < 8)
     {
-        return 1;
+        Forte y;
+        y = y + 1;
     }
 
-    return x * FUCK(x - 1);
+    Fine 0;
 }
