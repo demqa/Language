@@ -53,6 +53,8 @@ namespace ASMcmp
         PARAM_ISNT_PARAM           = 0x826,
         PARAM_ISNT_THE_ONLY        = 0x827,
         NO_PARAMS                  = 0x828,
+        RETURN_ISNT_RETURN         = 0x829,
+
 
     };
 
@@ -65,12 +67,54 @@ int FillNodes    (char **ptr, Node_t *node);
 int FillTree     (const char *filename, Tree_t *tree);
 int GenerateASM  (const char *filename, Tree_t *tree);
 
+
+
+int IsNum             (Node_t *node, int *ans);
+int IsVar             (Node_t *node, int *ans);
+int IsMathOper        (Node_t *node, int *ans);
+int IsLogOper         (Node_t *node, int *ans);
+
+int IncreaseBX        (const size_t number);
+int DecreaseBX        (const size_t number);
+
+int GenerateMark      (Node_t *mark);
+int GenerateMain      (Node_t *node, List_t *NT, List_t *GlobalNT);
+int GenerateFuncDef   (Node_t *node, List_t *NT, List_t *GlobalNT);
+int GenerateDefParams (Node_t *node, List_t *NT, List_t *GlobalNT, size_t *free_memory_index);
+
+int InitVar           (Node_t *node, List_t *NT, List_t *GlobalNT);
+int GenerateVar       (Node_t *node, List_t *NT, List_t *GlobalNT);
+int GenerateExpr      (Node_t *node, List_t *NT, List_t *GlobalNT);
+int InitGlobVar       (Node_t *node, List_t *GlobalNT);
+int GenerateGlobExpr  (Node_t *node, List_t *GlobalNT);
+int GenerateGlobVar   (Node_t *node, List_t *GlobalNT);
+
+int GenerateMathOper  (Node_t *node);
+int GenerateNum       (Node_t *node);
+int InitCallParams(Node_t *node, List_t *NT, List_t *GlobalNT, size_t *num_of_params);
+int GenerateCall      (Node_t *node, List_t *NT, List_t *GlobalNT);
+int GenerateJump      (Node_t *node, List_t *NT, List_t *GlobalNT, const char *mark, const int num);
+int GenerateCond      (Node_t *node, List_t *NT, List_t *GlobalNT, const char *mark, const int num);
+int GenerateIf        (Node_t *node, List_t *NT, List_t *GlobalNT);
+int GenerateReturn    (Node_t *node, List_t *NT, List_t *GlobalNT);
+int GenerateWhile     (Node_t *node, List_t *NT, List_t *GlobalNT);
+int GenerateScan      (Node_t *node, List_t *NT, List_t *GlobalNT);
+int GeneratePrint     (Node_t *node, List_t *NT, List_t *GlobalNT);
+int GenerateAssign    (Node_t *node, List_t *NT, List_t *GlobalNT);
+
+int GenerateStmt      (Node_t *node, List_t *NT, List_t *GlobalNT);
+int GenerateStmts     (Node_t *node, List_t *NT, List_t *GlobalNT);
+int GenerateGS        (Node_t *node, List_t *GlobalNT);
+int GenerateASM       (const char *filename, Tree_t *tree);
+
+
 #ifdef DEBUG_LIB_H
-#define CATCH_ERR    \
-do                    \
-{                      \
-    if (status)         \
-    {                    \
+#define CATCH_ERR   \
+do                   \
+{                     \
+    if (status)        \
+    {                   \
+        PRINT(ERR);      \
         PRINT_X(status);  \
         return status;     \
     }                       \

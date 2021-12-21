@@ -1,0 +1,15 @@
+main1 main2
+{
+    y = 3;
+
+    z = y * y;
+
+    k = FUCK(z);
+    
+    return k;
+}
+
+func FUCK(x)
+{
+    return x - x/2;
+}

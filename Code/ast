@@ -1,1 +1,1 @@
-{statement{{{'bar'}function{parameters{'y'}}}define{statement{{'x'}={'globalvar'}}}}}
+{{statement{{{main}function}define{{{{statement{{'y'}={171}}}statement{{'z'}={{'FUCK'}call{parameters{'y'}}}}}statement{print{'z'}}}statement{return{'z'}}}}}statement{{{'FUCK'}function{parameters{'x'}}}define{{statement{{{'x'}<={1}}if{{statement{return{1}}}decision}}}statement{return{{'x'}*{{'FUCK'}call{parameters{{'x'}-{1}}}}}}}}}

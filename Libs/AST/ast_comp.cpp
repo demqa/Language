@@ -305,7 +305,7 @@ Node_t *GetStmts(Tokens_t *tokens, size_t *index)
     status = TokensElem(tokens, *index, &token);
     CATCH_ERR;
 
-    if ( TOKEN_KEYW(KEYW_CLFIG)) return nullptr;
+    if (TOKEN_KEYW(KEYW_CLFIG)) return nullptr;
 
     Node_t *glob_stmts = nullptr;
     Node_t *stmt       = nullptr;
@@ -499,6 +499,27 @@ Node_t *GetReturn(Tokens_t *tokens, size_t *index)
     return ret_node;
 }
 
+Node_t *GetPrint(Tokens_t *tokens, size_t *index)
+{
+    int status = TokensVerify(tokens);
+    CATCH_ERR;
+    if (index == nullptr) return nullptr;
+
+    Node_t *print_node = nullptr;
+    status = GetKeyword(tokens, index, &print_node, KEYW_PRINT);
+    CATCH_ERR;
+
+    Node_t *expr = GetE(tokens, index);
+    CATCH_NULL(expr);
+
+    status = ConnectNodes(print_node, expr, R_CHILD);
+    CATCH_ERR;
+
+    if (Require(tokens, index, KEYW_DOTPOT)) return nullptr;
+
+    return print_node;
+}
+
 Node_t *GetStmt (Tokens_t *tokens, size_t *index)
 {
     int status = TokensVerify(tokens);
@@ -570,6 +591,11 @@ Node_t *GetStmt (Tokens_t *tokens, size_t *index)
             return GetReturn(tokens, index);
         }
         else
+        if (TOKEN_KEYW(KEYW_PRINT))
+        {
+            return GetPrint(tokens, index);
+        }
+        else
         {
             PRINT(UNDEFINED_KEYWORD);
             TOKEN;
@@ -638,6 +664,7 @@ Node_t *GetFuncDef(Tokens_t *tokens, size_t *index)
     if (KEYW != KEYW_MAIN1 && KEYW != KEYW_FUNC)
     {
         PRINT(KEYWORD_IS_INVALID);
+        TOKEN;
         abort();
         return nullptr;
     }

@@ -22,7 +22,7 @@ int main()
         PRINT_X(status);
     }
 
-    TreeDump(tree);
+    // TreeDump(tree);
     TreeDtor(tree);
 
     free(tree);

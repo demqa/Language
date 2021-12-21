@@ -145,8 +145,6 @@ int GetWord   (char **ptr, char *word, size_t *length)
     
     *length = size;
 
-    PRINT_UL(size);
-
     return status;
 }
 
