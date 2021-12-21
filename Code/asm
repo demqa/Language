@@ -12,39 +12,3 @@ JA END_IF_0:
 PUSH 1
 POP cx
 RET
-END_IF_0:
-PUSH [bx+0]
-PUSH [bx+0]
-PUSH 1
-SUB
-POP [bx+1]
-
-CALL FUCK:
-PUSH cx
-MUL
-POP cx
-RET
-PUSH bx
-PUSH 1
-SUB
-POP bx
-PUSH bx
-PUSH 0
-ADD
-POP bx
-
-main:
-PUSH 171
-POP [bx+0]
-PUSH [bx+0]
-POP [bx+1]
-
-CALL FUCK:
-PUSH cx
-POP [bx+1]
-PUSH [bx+1]
-OUT
-POP dx
-PUSH [bx+1]
-POP cx
-RET

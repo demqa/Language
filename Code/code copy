@@ -1,15 +1,23 @@
 main1 main2
 {
-    y = 3;
-
-    z = y * y;
-
-    k = FUCK(z);
-    
-    return k;
+    x = 1+3*12;
 }
 
-func FUCK(x)
+y = 0;
+
+func foo(x)
 {
-    return x - x/2;
+    x = 12^123^123;
+    return 1;
+    return popka(134*popka(x));
+
+    while ( n < 1 )
+    {
+        clown = 123;
+    }
+
+    if (x * 123 == 23) then
+    {
+        uebishe = 0;
+    }
 }

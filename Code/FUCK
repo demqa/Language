@@ -1,4 +1,3 @@
-
 main1 main2
 {
     y = 5;
@@ -18,4 +17,17 @@ func FUCK(x)
     }
 
     return x * FUCK(x - 1);
+}
+
+main1 main2
+{
+    y = 5;
+
+    while (y < 10)
+    {
+        print y;
+        y = y + 1;
+    }    
+
+    return 0;
 }

@@ -82,6 +82,7 @@ int GenerateMain      (Node_t *node, List_t *NT, List_t *GlobalNT);
 int GenerateFuncDef   (Node_t *node, List_t *NT, List_t *GlobalNT);
 int GenerateDefParams (Node_t *node, List_t *NT, List_t *GlobalNT, size_t *free_memory_index);
 
+int EvalVar           (Node_t *node, List_t *NT, List_t *GlobalNT);
 int InitVar           (Node_t *node, List_t *NT, List_t *GlobalNT);
 int GenerateVar       (Node_t *node, List_t *NT, List_t *GlobalNT);
 int GenerateExpr      (Node_t *node, List_t *NT, List_t *GlobalNT);
@@ -112,6 +113,7 @@ int GenerateASM       (const char *filename, Tree_t *tree);
 #define CATCH_ERR   \
 do                   \
 {                     \
+    PRINT_(1234_);       \
     if (status)        \
     {                   \
         PRINT(ERR);      \

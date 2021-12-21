@@ -665,7 +665,6 @@ Node_t *GetFuncDef(Tokens_t *tokens, size_t *index)
     {
         PRINT(KEYWORD_IS_INVALID);
         TOKEN;
-        abort();
         return nullptr;
     }
 

@@ -351,7 +351,7 @@ int GenerateAssign(Node_t *node, List_t *NT, List_t *GlobalNT)
     }
     else
     {
-        status = InitVar(node, NT, GlobalNT);
+        status = EvalVar(node, NT, GlobalNT);
         CATCH_ERR;
     }
 
@@ -362,6 +362,7 @@ int GenerateAssign(Node_t *node, List_t *NT, List_t *GlobalNT)
 int GenerateStmt  (Node_t *node, List_t *NT, List_t *GlobalNT)
 {
     CHECK_NODES_N_LISTS;
+    PRINT_X(status);
 
     switch (KEYW(node))
     {
@@ -399,7 +400,9 @@ int GenerateStmts (Node_t *node, List_t *NT, List_t *GlobalNT)
 
     while (NODE_KEYW(node, KEYW_STMT))
     {
+        PRINT_X(status);
         int status = GenerateStmt(node->right, NT, GlobalNT);
+        PRINT_X(status);
         CATCH_ERR;
 
         node = node->parent;
@@ -526,6 +529,35 @@ int InitVar(Node_t *node, List_t *NT, List_t *GlobalNT)
 
     fprintf(out, "POP [bx+%lu]\n", index - 1);
     fprintf(stderr, "POP [bx+%lu]\n", index - 1);
+
+    return status;
+}
+
+// DONE
+int EvalVar(Node_t *node, List_t *NT, List_t *GlobalNT)
+{
+    CHECK_NODES_N_LISTS;
+
+    status = SearchInNametable(node->left, NT);
+    if (status == ASMcmp::VARIABLE_FOUND)
+    {
+        status = GenerateExpr(node->right, NT, GlobalNT);
+        CATCH_ERR;
+
+        size_t index = 0;
+
+        status = IndexNametable(node->left, NT, &index);
+        CATCH_ERR;
+
+        fprintf(out, "POP [bx+%lu]\n", index);
+    }
+    else
+    {
+        CATCH_ERR;
+
+        status = InitVar(node, NT, GlobalNT);
+        CATCH_ERR;
+    }
 
     return status;
 }
@@ -828,7 +860,7 @@ int GenerateWhile(Node_t *node, List_t *NT, List_t *GlobalNT)
 
     int counter = __WHILE_COUNTER__++;
 
-    fprintf(out, "WHILE_%d:\n", counter);
+    fprintf(out, "\nWHILE_%d:\n", counter);
 
     status = GenerateCond(condition, NT, GlobalNT, "END_WHILE", counter);
     CATCH_ERR;
