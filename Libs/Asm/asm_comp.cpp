@@ -400,9 +400,7 @@ int GenerateStmts (Node_t *node, List_t *NT, List_t *GlobalNT)
 
     while (NODE_KEYW(node, KEYW_STMT))
     {
-        PRINT_X(status);
         int status = GenerateStmt(node->right, NT, GlobalNT);
-        PRINT_X(status);
         CATCH_ERR;
 
         node = node->parent;
@@ -502,7 +500,7 @@ int GenerateNum(Node_t *node)
     return status;
 }
 
-// DONE
+// ?????????
 int InitVar(Node_t *node, List_t *NT, List_t *GlobalNT)
 {
     CHECK_NODES_N_LISTS;
@@ -682,7 +680,7 @@ int InitCallParams(Node_t *node, List_t *NT, List_t *GlobalNT, size_t *num_of_pa
     status = GenerateExpr(node->right, NT, GlobalNT);
     CATCH_ERR;
 
-    fprintf(out, "POP [bx+%d]\n", *num_of_params);
+    fprintf(out, "POP [bx+%lu]\n", *num_of_params);
     fprintf(stderr, "POP [bx+1]\n");
 
     return status;
