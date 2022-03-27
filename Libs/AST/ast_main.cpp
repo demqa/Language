@@ -18,9 +18,15 @@ int main()
     if (tree == nullptr)   return 101010101;
     TreeCtor(tree);
 
+    PRINT_LINE;
+
     FillTree(tree, tokens);
 
+    PRINT_LINE;
+
     PoopTree("Code/ast", tree);
+
+    PRINT_LINE;
 
     TreeDump(tree);
 

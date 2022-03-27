@@ -14,6 +14,9 @@ POP cx
 RET
 END_IF_0:
 PUSH [bx+0]
+OUT
+POP dx
+PUSH [bx+0]
 PUSH [bx+0]
 PUSH 1
 SUB
@@ -24,41 +27,37 @@ PUSH cx
 MUL
 POP cx
 RET
+
+Tilt:
 PUSH bx
 PUSH 1
-SUB
+ADD
 POP bx
+PUSH 7
+POP [bx+1]
+
+CALL FUCK:
+PUSH cx
+POP [bx+1]
+PUSH [bx+1]
+POP cx
+RET
 PUSH bx
 PUSH 0
 ADD
 POP bx
 
 main:
-PUSH 4
-POP [bx+0]
-WHILE_0:
-PUSH [bx+0]
-PUSH 8
-JAE END_WHILE_0:
-DUMP
-PUSH [bx+0]
+PUSH 9
 POP [bx+1]
 
 CALL FUCK:
 PUSH cx
 OUT
 POP dx
-PUSH [bx+0]
-PUSH 1
-ADD
-POP [bx+0]
-PUSH [bx+0]
-PUSH 1
-ADD
-POP [bx+0]
-DUMP
-JMP WHILE_0:
-END_WHILE_0:
+PUSH 5
+OUT
+POP dx
 PUSH 0
 POP cx
 RET

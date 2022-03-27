@@ -9,6 +9,7 @@ int main()
     if (status) PRINT_X(status);
 
     status = FillTree("Code/ast", tree);
+
     if (status)
     {
         PRINT_D(status);
@@ -22,7 +23,8 @@ int main()
         PRINT_X(status);
     }
 
-    // TreeDump(tree);
+    TreeDump(tree);
+
     TreeDtor(tree);
 
     free(tree);

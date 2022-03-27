@@ -1,12 +1,27 @@
 Danse Macabre
 {
-    y = 4;
+    Forte FUCK(9);
 
-    Repetizione (y < 8)
-    {
-        Forte y;
-        y = y + 1;
-    }
+    Forte 5;
 
     Fine 0;
+}
+
+Opus FUCK(z)
+{
+    Piacere (z <= 1) Deciso
+    {
+        Fine 1;
+    }
+
+    Forte z;
+
+    Fine z * FUCK(z - 1);
+}
+
+Opus Tilt(y)
+{
+    x = FUCK(7);
+    
+    Fine x;
 }

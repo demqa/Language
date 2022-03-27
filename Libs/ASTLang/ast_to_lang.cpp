@@ -404,7 +404,7 @@ int PoopLang(const char *filename, Tree_t *tree)
 {
     int status = TreeVerify(tree);
     if (status) return status;
-    if (filename   == nullptr) return ASToLang::FILENAME_IS_NULL;
+    if (filename == nullptr) return ASToLang::FILENAME_IS_NULL;
 
     FILE *stream = nullptr;
     status = OpenFile(filename, &stream, "w");

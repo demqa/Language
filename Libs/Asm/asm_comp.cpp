@@ -643,6 +643,8 @@ int GenerateExpr  (Node_t *node, List_t *NT, List_t *GlobalNT)
         return status;
     }
 
+    // check where is result of expression (((in stack)))
+
     status = ASMcmp::UNDEFINED_OPERATOR;
     CATCH_ERR;
 
@@ -836,7 +838,6 @@ int GenerateReturn(Node_t *node, List_t *NT, List_t *GlobalNT)
     CATCH_ERR;
 
     fprintf(out, "POP cx\n");
-
     fprintf(out, "RET\n");
 
     return status;
@@ -1015,20 +1016,14 @@ int GenerateFuncDef(Node_t *node, List_t *NT, List_t *GlobalNT)
     Node_t *stmts  = node->right;
     CATCH_NULL(stmts);
 
+    // CATCH_ERR;
 
     status = GenerateStmts(stmts, NT, GlobalNT);
     CATCH_ERR;
 
+    // Maybe it should be there, but i dont actually know
+    // status = DecreaseBX(free_memory_index);
     // bx -= free_memory_index
-    status = DecreaseBX(free_memory_index);
-    CATCH_ERR;
-
-    // Node_t *ret = stmts->right;
-    // if (ret && NODE_KEYW(ret, KEYW_RETURN))
-    // {
-    //     status = GenerateStmt(ret, NT, GlobalNT);
-    //     CATCH_ERR;
-    // }
 
     status = ListClear(NT);
     CATCH_ERR;

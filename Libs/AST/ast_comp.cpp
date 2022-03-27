@@ -1043,12 +1043,16 @@ Node_t *GetV(Tokens_t *tokens, size_t *index)
     status = TokensElem(tokens, *index, &token);
     CATCH_ERR;
 
+    TOKEN;
+
     if (token->type == ID_TYPE)
     {
+        PRINT_LINE;
         return GetVar(tokens, index);
     }
     else
     {
+        PRINT_LINE;
         return GetN(tokens, index);
     }
 }
@@ -1063,19 +1067,14 @@ Node_t *GetF(Tokens_t *tokens, size_t *index)
     status = TokensElem(tokens, *index, &token);
     CATCH_ERR;
 
-    PRINT_LINE;
-
     if (token->type == ID_TYPE)
     {
-        PRINT_LINE;
         GET_NEXT_TOKEN;
         if (!TOKEN_KEYW(KEYW_OPRND))
         {
-            PRINT_LINE;
             (*index)--;
             return GetV(tokens, index);
         }
-        PRINT_LINE;
         
         (*index)--;
         Node_t *name   = GetIdentifier(tokens, index);
@@ -1289,4 +1288,6 @@ int PrintToken(Tokens_t *tokens, size_t index)
         #undef DEF_OPER
         #undef DEF_HELP
     }
+
+    return status;
 }
