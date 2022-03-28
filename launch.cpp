@@ -4,7 +4,7 @@ int main()
 {
     system("./Bin/ast_comp");
     system("./Bin/asm_comp");
-    system("./Bin/asm");
-    system("./Bin/cpu");
+    system("./Bin/asm Code/asm Code/binary");
+    system("./Bin/cpu Code/binary");
     return 0;
 }
