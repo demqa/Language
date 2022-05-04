@@ -5,9 +5,10 @@
 
 
 ## My Language
-This will be my own Programming Language
 
-But I haven't come up with idea of language yet.
+This is my musical programming language. It uses my own CPU emulator.
 
-))))
+<detail>
+Also this project has a bug in the backend, so you cannot use variables with the same name in different functions.
+</detail>
 
