@@ -5,9 +5,6 @@
 
 
 ## My Language
-This will be my own Programming Language
 
-But I haven't come up with idea of language yet.
-
-))))
+This is my musical language (Itaiano). Now I will improve some things & then I will translate my language in my x86-64 architecture, and then I will do executable file (ELF-64).
 
