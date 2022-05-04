@@ -1,5 +1,11 @@
 #include "asm_comp.h"
 
+// rework all the backend I have there
+// there is so much issues.
+// I thought that these scopes that I did there with my NameTable is nice, but this is real BULLSHIT,
+// because it does not work. So next thing is that I can use some struct Backend to deal with different
+// functions, but I have not done it. So that why code in this file is shit, despite the beauty.
+
 #define NODE_KEYW(NODE, KEYW) (NODE->value->type == KEYW_TYPE && NODE->value->arg.key_w == KEYW)
 #define NODE_ID(NODE) (NODE->value->type == ID_TYPE)
 #define KEYW(NODE) ((NODE->value->type == KEYW_TYPE) ? NODE->value->arg.key_w : 0)
@@ -82,6 +88,7 @@ int GetKeyword(char **ptr, Node_t *node)
     #include "../operators"
  /* else */
     {
+        PRINT(UNDEFINED_KEYWORD);
         PRINT_SM(*ptr, 10);
         return ASMcmp::UNDEFINED_KEYWORD;
     }
@@ -318,6 +325,11 @@ int GenerateScan(Node_t *node, List_t *NT, List_t *GlobalNT)
 
     PRINT_(NOT_IMPLEMENTED);
 
+//     fprintf(out, "IN\n");
+
+//     status = GenerateExpr(node->right, NT, GlobalNT);
+//     CATCH_ERR;
+
     return status;
 }
 
@@ -528,7 +540,7 @@ int InitVar(Node_t *node, List_t *NT, List_t *GlobalNT)
 
         CATCH_ERR;
 
-        // return status;
+        return status;
     }
     
     CATCH_ERR;
@@ -643,8 +655,6 @@ int GenerateExpr  (Node_t *node, List_t *NT, List_t *GlobalNT)
         return status;
     }
 
-    // check where is result of expression (((in stack)))
-
     status = ASMcmp::UNDEFINED_OPERATOR;
     CATCH_ERR;
 
@@ -665,6 +675,7 @@ int InitCallParams(Node_t *node, List_t *NT, List_t *GlobalNT, size_t *num_of_pa
 
     if (node->left != nullptr)
     {
+        // TODO
         PRINT_(NOT_IMPLEMENTED);
         status = ASMcmp::PARAM_ISNT_THE_ONLY;
         CATCH_ERR;
@@ -769,6 +780,7 @@ int GenerateCond(Node_t *node, List_t *NT, List_t *GlobalNT, const char *mark, c
     return status;
 }
 
+// TODO: place this counter into struct Backend
 static size_t __IF_COUNTER__    = 0;
 static size_t __WHILE_COUNTER__ = 0;
 
@@ -838,6 +850,7 @@ int GenerateReturn(Node_t *node, List_t *NT, List_t *GlobalNT)
     CATCH_ERR;
 
     fprintf(out, "POP cx\n");
+
     fprintf(out, "RET\n");
 
     return status;
@@ -861,18 +874,16 @@ int GenerateWhile(Node_t *node, List_t *NT, List_t *GlobalNT)
     status = GenerateCond(condition, NT, GlobalNT, "END_WHILE", counter);
     CATCH_ERR;
 
-    fprintf(out, "DUMP\n");
+    // fprintf(out, "DUMP\n");
 
-    Tree_t tree = {};
-
-    tree.root = while_stmts;
-
-    TreeDump(&tree);
+    // Tree_t tree = {};
+    // tree.root = while_stmts;
+    // TreeDump(&tree);
 
     status = GenerateStmts(while_stmts, NT, GlobalNT);
     CATCH_ERR;
 
-    fprintf(out, "DUMP\n");
+    // fprintf(out, "DUMP\n");
 
     fprintf(out, "JMP WHILE_%d:\n", counter);
 
@@ -1016,14 +1027,22 @@ int GenerateFuncDef(Node_t *node, List_t *NT, List_t *GlobalNT)
     Node_t *stmts  = node->right;
     CATCH_NULL(stmts);
 
-    // CATCH_ERR;
-
     status = GenerateStmts(stmts, NT, GlobalNT);
     CATCH_ERR;
 
-    // Maybe it should be there, but i dont actually know
-    // status = DecreaseBX(free_memory_index);
     // bx -= free_memory_index
+    status = DecreaseBX(free_memory_index);
+    CATCH_ERR;
+
+    // return must be in program
+    // so this will be done automatically.
+
+    // Node_t *ret = stmts->right;
+    // if (ret && NODE_KEYW(ret, KEYW_RETURN))
+    // {
+    //     status = GenerateStmt(ret, NT, GlobalNT);
+    //     CATCH_ERR;
+    // }
 
     status = ListClear(NT);
     CATCH_ERR;

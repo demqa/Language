@@ -1,7 +1,12 @@
 #include "ast_to_lang.h"
 
-size_t SPACES_LEVEL = 0;
+// This file was created in exhausted condition. It is not really my code I believe.
+// This is real shit. All the keywords are HARDCODED. Not a single structure in functions.
 
+// place this in struct
+static size_t SPACES_LEVEL = 0;
+
+// place this in header
 int PoopFuncDef(Node_t *node);
 int PoopStmts(Node_t *node);
 int PoopVar(Node_t *node);
@@ -107,6 +112,7 @@ int PoopIf(Node_t *node)
 
     PoopSpaces(SPACES_LEVEL);
 
+    // why this is not KEYWords... I dont know
     fprintf(out, "Piacere "); PoopCondition(node->left); fprintf(out, " Deciso\n");
 
     status = PoopStmts(node->right);
@@ -404,7 +410,7 @@ int PoopLang(const char *filename, Tree_t *tree)
 {
     int status = TreeVerify(tree);
     if (status) return status;
-    if (filename == nullptr) return ASToLang::FILENAME_IS_NULL;
+    if (filename   == nullptr) return ASToLang::FILENAME_IS_NULL;
 
     FILE *stream = nullptr;
     status = OpenFile(filename, &stream, "w");

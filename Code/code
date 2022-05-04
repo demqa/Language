@@ -1,27 +1,20 @@
 Danse Macabre
 {
-    Forte FUCK(9);
+    y = 0;
 
-    Forte 5;
+    Marcato y;
+
+    Forte FUCK(y);
 
     Fine 0;
 }
 
-Opus FUCK(z)
+Opus FUCK(x)
 {
-    Piacere (z <= 1) Deciso
-    {
-        Fine 1;
-    }
+   Piacere (x <= 1) Deciso
+   {
+       Fine 1;
+   }
 
-    Forte z;
-
-    Fine z * FUCK(z - 1);
-}
-
-Opus Tilt(y)
-{
-    x = FUCK(7);
-    
-    Fine x;
+   Fine x * FUCK(x - 1);
 }

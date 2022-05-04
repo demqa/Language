@@ -381,15 +381,12 @@ Node_t *GetCondition(Tokens_t *tokens, size_t *index)
 
     Node_t *l_expr = GetE(tokens, index);
     CATCH_NULL(l_expr);
-    PRINT_LINE;
 
     Node_t *log_op = GetLogOp(tokens, index);
     CATCH_NULL(log_op);
-    PRINT_LINE;
 
     Node_t *r_expr = GetE(tokens, index);
     CATCH_NULL(r_expr);
-    PRINT_LINE;
 
     status = ConnectNodes(log_op, l_expr, L_CHILD);
     CATCH_ERR;
@@ -414,8 +411,6 @@ Node_t *GetWhile(Tokens_t *tokens, size_t *index)
 
     Node_t *condition = GetCondition(tokens, index);
     CATCH_NULL(condition);
-
-    PRINT_LINE;
 
     status = ConnectNodes(while_node,  condition, L_CHILD);
     CATCH_ERR;
@@ -525,6 +520,27 @@ Node_t *GetPrint(Tokens_t *tokens, size_t *index)
     return print_node;
 }
 
+Node_t *GetScan(Tokens_t *tokens, size_t *index)
+{
+    int status = TokensVerify(tokens);
+    CATCH_ERR;
+    if (index == nullptr) return nullptr;
+
+    Node_t *scan_node = nullptr;
+    status = GetKeyword(tokens, index, &scan_node, KEYW_SCAN);
+    CATCH_ERR;
+
+    Node_t *var = GetVar(tokens, index);
+    CATCH_NULL(var);
+
+    status = ConnectNodes(scan_node, var, R_CHILD);
+    CATCH_ERR;
+
+    if (Require(tokens, index, KEYW_DOTPOT)) return nullptr;
+
+    return scan_node;
+}
+
 Node_t *GetStmt (Tokens_t *tokens, size_t *index)
 {
     int status = TokensVerify(tokens);
@@ -601,6 +617,11 @@ Node_t *GetStmt (Tokens_t *tokens, size_t *index)
             return GetPrint(tokens, index);
         }
         else
+        if (TOKEN_KEYW(KEYW_SCAN))
+        {
+            return GetScan(tokens, index);
+        }
+        else
         {
             PRINT(UNDEFINED_KEYWORD);
             TOKEN;
@@ -670,7 +691,7 @@ Node_t *GetFuncDef(Tokens_t *tokens, size_t *index)
     {
         PRINT(KEYWORD_IS_INVALID);
         TOKEN;
-        abort();
+        // abort();
         return nullptr;
     }
 
@@ -690,11 +711,11 @@ Node_t *GetFuncDef(Tokens_t *tokens, size_t *index)
     
     GET_NEXT_TOKEN;
 
-    Node_t *def    = nullptr;
+    Node_t *def  = nullptr;
     status = InitKeyword(&def,  KEYW_DEFINE);
     CATCH_ERR;
 
-    Node_t *func   = nullptr;
+    Node_t *func = nullptr;
     status = InitKeyword(&func, KEYW_FUNC);
     CATCH_ERR;
 
@@ -1043,16 +1064,12 @@ Node_t *GetV(Tokens_t *tokens, size_t *index)
     status = TokensElem(tokens, *index, &token);
     CATCH_ERR;
 
-    TOKEN;
-
     if (token->type == ID_TYPE)
     {
-        PRINT_LINE;
         return GetVar(tokens, index);
     }
     else
     {
-        PRINT_LINE;
         return GetN(tokens, index);
     }
 }
@@ -1075,7 +1092,7 @@ Node_t *GetF(Tokens_t *tokens, size_t *index)
             (*index)--;
             return GetV(tokens, index);
         }
-        
+
         (*index)--;
         Node_t *name   = GetIdentifier(tokens, index);
         CATCH_NULL(name);
@@ -1169,7 +1186,6 @@ int PoopNodes(const Node_t *node, FILE *stream /*, size_t *level */)
         
             default:
                 fprintf(stderr, "INVALID_KEYWORD\n");
-                fprintf(stream, "DEADDEADDEAD\n");
                 break;
         }
 
