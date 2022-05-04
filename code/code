@@ -2,12 +2,12 @@ Danse Macabre
 {
     y = 10;
 
-    Forte FUCK(y);
+    Forte FUCK(y, x+y+z, 64*FUCK(x));
 
     Fine 0;
 }
 
-Opus FUCK(x)
+Opus FUCK(x, y, z)
 {
    Piacere (x <= 1) Deciso
    {

@@ -213,7 +213,10 @@ Node_t *GetGS(Tokens_t *tokens, size_t *index)
         status = InitKeyword(&stmt, KEYW_STMT);
         CATCH_ERR;
 
-        if (token->type == ID_TYPE /* || TOKEN_KEYW(KEYW_CONST) */)
+        // since now there cannot be global variables
+
+        /*
+        if (token->type == ID_TYPE) // || TOKEN_KEYW(KEYW_CONST)
         {
             Node_t *var    = GetVar(tokens, index);
             CATCH_NULL(current);
@@ -235,6 +238,7 @@ Node_t *GetGS(Tokens_t *tokens, size_t *index)
             current = assign;
         }
         else
+        */
         if (token->type == KEYW_TYPE)
         {
             current = GetFuncDef(tokens, index);
@@ -629,15 +633,6 @@ Node_t *GetStmt (Tokens_t *tokens, size_t *index)
         }
     }
 
-    // CASE 2: EXPRESSION
-
-    // TODO:
-    // CASE 3: return
-
-    // CASE 4: if
-
-    // CASE 5: while
-
     stmt_child = GetE(tokens, index);
     CATCH_NULL(stmt_child);
 
@@ -689,6 +684,7 @@ Node_t *GetFuncDef(Tokens_t *tokens, size_t *index)
 
     if (KEYW != KEYW_MAIN1 && KEYW != KEYW_FUNC)
     {
+        PRINT(EXPECTED_FUNC_DEF);
         PRINT(KEYWORD_IS_INVALID);
         TOKEN;
         // abort();
@@ -769,19 +765,44 @@ Node_t *GetFuncParams(Tokens_t *tokens, size_t *index)
 
     if (Require(tokens, index, KEYW_OPRND)) return nullptr;
 
-    // TODO: many args
-    // NOW : only 1 arg
-    Node_t *var = GetVar(tokens, index);
-    CATCH_NULL(var);
-
-    if (Require(tokens, index, KEYW_CLRND)) return nullptr;
-
     Node_t *param = nullptr;
     status = InitKeyword(&param, KEYW_PARAM);
     CATCH_ERR;
 
+    Node_t *var = GetVar(tokens, index);
+    CATCH_NULL(var);
+
     status = ConnectNodes(param, var, R_CHILD);
     CATCH_ERR;
+
+    Token_t *token = nullptr;
+    status = TokensElem(tokens, *index, &token);
+    CATCH_ERR;
+
+    while (TOKEN_KEYW(KEYW_COMMA))
+    {
+        GET_NEXT_TOKEN;
+
+        var = GetVar(tokens, index);
+        CATCH_NULL(var);
+
+        Node_t *param_new = nullptr;
+        status = InitKeyword(&param_new, KEYW_PARAM);
+        CATCH_ERR;
+
+        status = ConnectNodes(param_new, param, L_CHILD);
+        CATCH_ERR;
+
+        status = ConnectNodes(param_new,   var, R_CHILD);
+        CATCH_ERR;
+
+        param = param_new;
+
+        status = TokensElem(tokens, *index, &token);
+        CATCH_ERR;
+    }
+
+    if (Require(tokens, index, KEYW_CLRND)) return nullptr;
 
     return param;
 }
@@ -794,32 +815,44 @@ Node_t *GetCallParams(Tokens_t *tokens, size_t *index)
 
     if (Require(tokens, index, KEYW_OPRND)) return nullptr;
 
-    // TODO: many args
-    //  NOW: only 1 arg
-    Node_t *expr  = GetE(tokens, index);
-    CATCH_NULL(expr);
-
-    /*
-    if (Require(tokens, index, KEYW_COMMA))
-    {
-        (*index)--;
-        if (Require(tokens, index, KEYW_CLRND))
-        {
-            PRINT(INVALID_SYNTAX);
-            return nullptr;
-        }
-        // continue normal processing
-    }
-    */
-
-    if (Require(tokens, index, KEYW_CLRND)) return nullptr;
-
     Node_t *param = nullptr;
     status = InitKeyword(&param, KEYW_PARAM);
     CATCH_ERR;
 
+    Node_t *expr  = GetE(tokens, index);
+    CATCH_NULL(expr);
+
     status = ConnectNodes(param, expr, R_CHILD);
     CATCH_ERR;
+
+    Token_t *token = nullptr;
+    status = TokensElem(tokens, *index, &token);
+    CATCH_ERR;
+
+    while (TOKEN_KEYW(KEYW_COMMA))
+    {
+        GET_NEXT_TOKEN;
+
+        expr = GetE(tokens, index);
+        CATCH_NULL(expr);
+
+        Node_t *param_new = nullptr;
+        status = InitKeyword(&param_new, KEYW_PARAM);
+        CATCH_ERR;
+
+        status = ConnectNodes(param_new, param, L_CHILD);
+        CATCH_ERR;
+
+        status = ConnectNodes(param_new,  expr, R_CHILD);
+        CATCH_ERR;
+
+        param = param_new;
+
+        status = TokensElem(tokens, *index, &token);
+        CATCH_ERR;
+    }
+
+    if (Require(tokens, index, KEYW_CLRND)) return nullptr;
 
     return param;
 }

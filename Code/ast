@@ -1,1 +1,0 @@
-{{statement{{{main}function}define{{{statement{{'y'}={10}}}statement{print{{'FUCK'}call{parameter{'y'}}}}}statement{return{0}}}}}statement{{{'FUCK'}function{parameter{'x'}}}define{{statement{{{'x'}<={1}}if{{statement{return{1}}}decision}}}statement{return{{'x'}*{{'FUCK'}call{parameter{{'x'}-{1}}}}}}}}}

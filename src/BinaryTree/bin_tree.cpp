@@ -488,8 +488,9 @@ TreeStatus TreeDump(Tree_t *tree)
     }
 
     size_t number_of_node = 0;
-    FILE *dump_file = fopen("Dump/dump", "w");
-    
+    FILE *dump_file = fopen("dump", "w");
+    if (dump_file == nullptr) return CANT_OPEN_DUMP_FILE;
+
     fputs("digraph structs {\n", dump_file);
     fputs("    node [color=black, shape=box, style=\"filled\"];\n", dump_file);
 
@@ -499,8 +500,8 @@ TreeStatus TreeDump(Tree_t *tree)
 
     fclose(dump_file);
 
-    system("dot Dump/dump -T png -o Dump/dump.png");
-    system("gwenview Dump/dump.png");
+    system("dot dump -T png -o dump.png");
+    system("gwenview dump.png");
 
     return (TreeStatus) status;
 }

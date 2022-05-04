@@ -48,6 +48,8 @@ enum TreeStatus
     CANT_REMOVE_TREE_ROOT         = 1 << 20,
     CANT_REMOVE_NON_TERMINAL_NODE = 1 << 21,
 
+    CANT_OPEN_DUMP_FILE           = 1 << 22,
+
     UNBELIEVABLE_CASE             = 1 << 30,
     RESULT_IS_UNKNOWN             = 1 << 31,
 };
