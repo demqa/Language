@@ -1186,7 +1186,7 @@ int PoopNodes(const Node_t *node, FILE *stream /*, size_t *level */)
     //     (*level)++;
     // }
 
-    if (node->left ) status |= PoopNodes(node->left,  stream /*, level */);
+    if (node->left) status |= PoopNodes(node->left,  stream /*, level */);
 
     if (token->type == ID_TYPE)
     {
