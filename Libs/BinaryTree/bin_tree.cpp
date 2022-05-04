@@ -500,7 +500,7 @@ TreeStatus TreeDump(Tree_t *tree)
     fclose(dump_file);
 
     system("dot Dump/dump -T png -o Dump/dump.png");
-    system("eog Dump/dump.png");
+    system("gwenview Dump/dump.png");
 
     return (TreeStatus) status;
 }

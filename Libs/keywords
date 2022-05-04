@@ -1,28 +1,28 @@
-DEF_KEYW(MAIN1,    0x500, main1,  main) // DANSE macabre — пляска смерти
-DEF_KEYW(MAIN2,    0x510, main2,  dead) // danse MACABRE — пляска смерти
-DEF_KEYW(FUNC,     0x501, func,   function) // Opus          — опус, сочинение
-DEF_KEYW(IF,       0x502, if,     if) // Piacere — желание;
-DEF_KEYW(THEN,     0x503, then,   dead) // Deciso — решительно;
-DEF_KEYW(ELSE,     0x504, else,   dead) // Ostinato — неотступно
+DEF_KEYW(MAIN1,    0x500, Danse,       main) // DANSE macabre — пляска смерти
+DEF_KEYW(MAIN2,    0x510, Macabre,     dead) // danse MACABRE — пляска смерти
+DEF_KEYW(FUNC,     0x501, Opus,        function) // Opus          — опус, сочинение
+DEF_KEYW(IF,       0x502, Piacere,     if) // Piacere — желание;
+DEF_KEYW(THEN,     0x503, Deciso,      dead) // Deciso — решительно;
+DEF_KEYW(ELSE,     0x504, Ostinato,    dead) // Ostinato — неотступно
 // DEF_KEYW(DO,       0x505, do    )
-DEF_KEYW(WHILE,    0x506, while,  while) // Repetizione — повторение
-DEF_KEYW(FOR,      0x507, for,    dead) // Attacca — продолжать без перерыва 
-DEF_KEYW(CONST,    0x508, const,  const) // Sempre семпре—постоянно
-DEF_KEYW(RETURN,   0x509, return, return) // Fine — конец;
-DEF_KEYW(INCR,     0x50A, incr,   dead) // Crescendo  — постепенно усиливая
-DEF_KEYW(DECR,     0x50B, decr,   dead) // Diminuendo — постепенно затихая
+DEF_KEYW(WHILE,    0x506, Repetizione, while) // Repetizione — повторение
+DEF_KEYW(FOR,      0x507, Attacca,     dead) // Attacca — продолжать без перерыва 
+DEF_KEYW(CONST,    0x508, const,       const) // Sempre семпре—постоянно
+DEF_KEYW(RETURN,   0x509, Fine,        return) // Fine — конец;
+DEF_KEYW(INCR,     0x50A, incr,        dead) // Crescendo  — постепенно усиливая
+DEF_KEYW(DECR,     0x50B, decr,        dead) // Diminuendo — постепенно затихая
                                   
 // DEF_KEYW(OPFIG,    0x50C, OPFIG ) // Accelerando аччелерандо — ускоряя
 // DEF_KEYW(CLFIG,    0x50D, CLFIG ) // Rallentando раллентандо — замедляя
-DEF_KEYW(PRINT,    0x50E, print,  print) // Forte форте — сильно, громко
-DEF_KEYW(SCAN,     0x50F, scan,   scan) // Marcato маркато — четко, подчеркнуто
-DEF_KEYW(PARAM,    0x533, 666,    parameters) // 0x...
-DEF_KEYW(STMT,     0x544, 666,    statement) // 0x57A7
-DEF_KEYW(EOF,      0x555, 666,    dead) // 0xEOF
-DEF_KEYW(DEFINE,   0x566, 666,    define) // 0xDEF
+DEF_KEYW(PRINT,    0x50E, Forte,       print) // Forte форте — сильно, громко
+DEF_KEYW(SCAN,     0x50F, Marcato,        scan) // Marcato маркато — четко, подчеркнуто
+DEF_KEYW(PARAM,    0x533, 666,         parameter) // 0x...
+DEF_KEYW(STMT,     0x544, 666,         statement) // 0x57A7
+DEF_KEYW(EOF,      0x555, 666,         dead) // 0xEOF
+DEF_KEYW(DEFINE,   0x566, 666,         define) // 0xDEF
 // DEF_KEYW(FUNC,     0x577, 666   ) // 0xF17C
-DEF_KEYW(CALL,     0x588, 666,    call) // 0xCA11
-DEF_KEYW(DECISION, 0x599, 666,    decision) // 0xDEC15
+DEF_KEYW(CALL,     0x588, 666,         call) // 0xCA11
+DEF_KEYW(DECISION, 0x599, 666,         decision) // 0xDEC15
 /*
 
 Sehr зер (нем.) — очень

@@ -1,20 +1,18 @@
-main1 main2
+Danse Macabre
 {
-    y = 5;
+    y = 10;
 
-    z = FUCK(y);
+    Forte FUCK(y);
 
-    print z;
-
-    return z;
+    Fine 0;
 }
 
-func FUCK(x)
+Opus FUCK(x)
 {
-    if (x <= 1) then
-    {
-        return 1;
-    }
+   Piacere (x <= 1) Deciso
+   {
+       Fine 1;
+   }
 
-    return x * FUCK(x - 1);
+   Fine x * FUCK(x - 1);
 }

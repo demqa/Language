@@ -1,0 +1,63 @@
+NO_SOL = (404);
+INF_SOL = (8);
+Opus solve_quadratic()
+{
+    Piacere ((a) == (0)) Deciso
+    {
+
+        Fine (solve_linear((b)(c)));
+    }
+    Piacere ((c) == (0)) Deciso
+    {
+        Piacere ((b) == (0)) Deciso
+        {
+            Forte (0);
+
+            Fine (1);
+        }
+        Forte (0);
+
+        Fine (solve_linear((a)(b)));
+    }
+    discr = (((b)^(2))-(((4)*(a))*(c)));
+    Piacere ((discr) <  (0)) Deciso
+    {
+        Forte (NO_SOL);
+
+        Fine (NO_SOL);
+    }
+    Piacere ((discr) == (0)) Deciso
+    {
+        Forte (((0)-(b))/((2)*(a)));
+
+        Fine (1);
+    }
+    discr = ((discr)^((1)/(2)));
+    Forte ((((0)-(b))+(discr))/((2)*(a)));
+    Forte ((((0)-(b))-(discr))/((2)*(a)));
+
+    Fine (2);
+}
+
+Opus solve_linear()
+{
+    Piacere ((b) == (0)) Deciso
+    {
+        Piacere ((c) != (0)) Deciso
+        {
+            Forte (NO_SOL);
+
+            Fine (NO_SOL);
+        }
+    }
+}
+
+Opus main()
+{
+    a = (1);
+    b = (4);
+    c = (6);
+
+    Fine (0);
+}
+
