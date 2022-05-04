@@ -34,7 +34,7 @@ ADD
 POP bx
 
 main:
-PUSH 0
+PUSH 10
 POP [bx+0]
 PUSH [bx+0]
 POP [bx+1]

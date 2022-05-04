@@ -1,8 +1,6 @@
 Danse Macabre
 {
-    y = 0;
-
-    Marcato y;
+    y = 10;
 
     Forte FUCK(y);
 
