@@ -1,4 +1,5 @@
 #include "asm_comp.h"
+#include "../ELF/elf_gen.h"
 
 int main()
 {
@@ -8,21 +9,22 @@ int main()
     int status = TreeCtor(tree);
     if (status) PRINT_X(status);
 
-    status = FillTree("Code/ast", tree);
+    status = FillTree("../code/ast", tree);
     if (status)
     {
         PRINT_D(status);
         PRINT_X(status);
     }
 
-    status = GenerateASM("Code/asm", tree);
+    TreeDump(tree);
+
+    status = GenerateASM("../code/asm", tree);
     if (status)
     {
         PRINT_D(status);
         PRINT_X(status);
     }
 
-    // TreeDump(tree);
     TreeDtor(tree);
 
     free(tree);

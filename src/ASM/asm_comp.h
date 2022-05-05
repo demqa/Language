@@ -3,6 +3,8 @@
 
 #include "../LexemAnalyzer/lex_anal.h"
 #include "../List/list.h"
+#include "../ELF/elf_gen.h"
+
 #include <math.h>
 
 namespace ASMcmp
@@ -61,12 +63,27 @@ namespace ASMcmp
     const size_t INITIAL_CAPACITY = 16;
 }
 
+struct Backend
+{
+    List_t *NT;
+    List_t *GlobalNT; // not used for now
+
+    FILE *asm_file;
+    FILE *lst_file;
+
+    char  *code_buff;
+    size_t buff_ptr;
+    size_t buff_size;
+
+    int status;
+}
+
+
 int InitEmptyNode(Node_t **node_);
 int ReadBuffer   (char **buffer, FILE *stream);
 int FillNodes    (char **ptr, Node_t *node);
 int FillTree     (const char *filename, Tree_t *tree);
 int GenerateASM  (const char *filename, Tree_t *tree);
-
 
 
 int IsNum             (Node_t *node, int *ans);
@@ -82,7 +99,7 @@ int GenerateMain      (Node_t *node, List_t *NT, List_t *GlobalNT);
 int GenerateFuncDef   (Node_t *node, List_t *NT, List_t *GlobalNT);
 int GenerateDefParams (Node_t *node, List_t *NT, List_t *GlobalNT, size_t *free_memory_index);
 
-int EvalVar           (Node_t *node, List_t *NT, List_t *GlobalNT);
+/* int EvalVar           (Node_t *node, List_t *NT, List_t *GlobalNT); */
 int InitVar           (Node_t *node, List_t *NT, List_t *GlobalNT);
 int GenerateVar       (Node_t *node, List_t *NT, List_t *GlobalNT);
 int GenerateExpr      (Node_t *node, List_t *NT, List_t *GlobalNT);
@@ -92,7 +109,7 @@ int GenerateGlobVar   (Node_t *node, List_t *GlobalNT);
 
 int GenerateMathOper  (Node_t *node);
 int GenerateNum       (Node_t *node);
-int InitCallParams(Node_t *node, List_t *NT, List_t *GlobalNT, size_t *num_of_params);
+int InitCallParams    (Node_t *node, List_t *NT, List_t *GlobalNT, size_t *num_of_params);
 int GenerateCall      (Node_t *node, List_t *NT, List_t *GlobalNT);
 int GenerateJump      (Node_t *node, List_t *NT, List_t *GlobalNT, const char *mark, const int num);
 int GenerateCond      (Node_t *node, List_t *NT, List_t *GlobalNT, const char *mark, const int num);
@@ -110,10 +127,10 @@ int GenerateASM       (const char *filename, Tree_t *tree);
 
 
 #ifdef DEBUG_LIB_H
-#define CATCH_ERR   \
-do                   \
-{                     \
-    PRINT_(1234_);       \
+#define CATCH_ERR  \
+do                  \
+{                    \
+    PRINT_(1234_);    \
     if (status)        \
     {                   \
         PRINT(ERR);      \

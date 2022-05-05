@@ -24,3 +24,5 @@ I have to solve some problems with my translator:
 4. Where will be my RAM? And how can I allocate memory? (I think this is too hard for now).
    a. I found out, that RAM is not necessary for my project. There I can store some constants, that are global in file. But using global variables is harmless for security, so I will avoid it, and my users will be secured from it.
 
+
+5. Now I've decided to create some basis of my program.
