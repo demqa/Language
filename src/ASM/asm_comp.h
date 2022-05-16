@@ -6,6 +6,7 @@
 #include "../ELF/elf_gen.h"
 
 #include <math.h>
+#include <stdint.h>
 
 namespace ASMcmp
 {
@@ -68,14 +69,15 @@ struct Backend
     List_t *NT;
     List_t *GlobalNT; // not used for now
 
-    FILE *asm_file;
-    FILE *lst_file;
+    /* FILE *asm_file; */
+    /* FILE *lst_file; */
+
+    List_t *LabelsDest;
+    List_t *LabelsSource;
 
     char  *code_buff;
     size_t buff_ptr;
     size_t buff_size;
-
-    int status;
 }
 
 

@@ -586,7 +586,7 @@ StatusCode ListClear   (List_t *list)
     return (StatusCode) status;
 }
 
-// retu5,rns physical index when found
+// returns physical index when found
 // returns 0 if not found or there is some error
 size_t     ListValueIndex(List_t *list, Val_t value)
 {
@@ -594,28 +594,38 @@ size_t     ListValueIndex(List_t *list, Val_t value)
         return 0;
     
     size_t elem = list->front;
-    // TODO
-    // FUNC EQUAL THAT GIVES USER
-    while (elem != 0 && strcmp(list->data[elem].value.name, value.name) != 0)
-        elem = list->data[elem].next;
-    
+
+    if (value.type == VariableType)
+    {
+        while (elem != 0 && strcmp(list->data[elem].value.elem.name, value.elem.name) != 0)
+            elem = list->data[elem].next;
+    }
+    else
+    if (value.type == DestinLabel ||
+        value.type == SourceLabel)
+    {
+        while (elem != 0 && strcmp(list->data[elem].value.elem.mark, value.elem.mark) != 0)
+            elem = list->data[elem].next;
+    }
+
+
     return elem;
 }
 
-size_t     ListValueIndex(List_t *list, const char *str)
-{
-    if (ListVerify(list) != LIST_IS_OK)
-        return 0;
-    if (str == nullptr) return 0;
-    
-    size_t elem = list->front;
-    // TODO
-    // FUNC EQUAL THAT GIVES USER
-    while (elem != 0 && strcmp(list->data[elem].value.name, str) != 0)
-        elem = list->data[elem].next;
-    
-    return elem;
-}
+// size_t     ListValueIndex(List_t *list, const char *str)
+// {
+//     if (ListVerify(list) != LIST_IS_OK)
+//         return 0;
+//     if (str == nullptr) return 0;
+
+//     size_t elem = list->front;
+//     // TODO
+//     // FUNC EQUAL THAT GIVES USER
+//     while (elem != 0 && strcmp(list->data[elem].value.name, str) != 0)
+//         elem = list->data[elem].next;
+
+//     return elem;
+// }
 
 StatusCode ListVerify(List_t *list)
 {
@@ -651,7 +661,7 @@ StatusCode ListVerify(List_t *list)
     if (list->data[0].next  != 0 ||
         list->data[0].prev  != 0 ||
         // func empty elem
-        list->data[0].value.index != 0 && list->data[0].value.name[0] != '\0') 
+        list->data[0].value.type != 0 && list->data[0].value.elem.name[0] != '\0')
         error |= LIST_ZERO_INDEX_VAL_RUINED;
 
     if (error != LIST_IS_OK)
@@ -664,7 +674,7 @@ StatusCode ListVerify(List_t *list)
               list->size == 1
               ||
               list->data[list->front].prev  == FREE_INDEX &&
-              list->data[list->front].value.index == DEAD_VALUE.index &&
+              list->data[list->front].value.type == DEAD_VALUE.type &&
               list->size == 0))
             error |= LIST_DATA_RUINED;
         
@@ -673,7 +683,7 @@ StatusCode ListVerify(List_t *list)
             if (index != list->front)
             {   
                 // function compare
-                if (list->data[index].value.index != DEAD_VALUE.index ||
+                if (list->data[index].value.type != DEAD_VALUE.type ||
                     list->data[index].prev  != FREE_INDEX)
                 {
                     error |= LIST_DATA_RUINED;
@@ -705,7 +715,7 @@ StatusCode ListVerify(List_t *list)
             list->data[index].prev  != FREE_INDEX)
             ||
            (list->data[index].prev  == FREE_INDEX     && 
-            list->data[index].value.index != DEAD_VALUE.index))
+            list->data[index].value.type != DEAD_VALUE.type))
         {
             error |= LIST_INDEXES_RUINED;
             break;
@@ -754,14 +764,14 @@ StatusCode ListVerify(List_t *list)
         if (list->data[place].next == 0)
         {
             if (list->data[place].prev  != FREE_INDEX ||
-                list->data[place].value.index != DEAD_VALUE.index)
+                list->data[place].value.type != DEAD_VALUE.type)
                 error |= LIST_DATA_RUINED;
             size++;
             break;
         }
         else
         if (list->data[place].prev  != FREE_INDEX ||
-            list->data[place].value.index != DEAD_VALUE.index)
+            list->data[place].value.type != DEAD_VALUE.type)
         {
             error |= LIST_DATA_RUINED;
             break;
@@ -857,7 +867,8 @@ StatusCode ListDump(List_t *list)
                            "label=\" %lu | { <p> %lu | %s %lu | <n> %lu}\"];\n",
                                 index, ColorPicker(list, index), index,
                                 (list->data[index].prev == FREE_INDEX) ? -1 : list->data[index].prev,
-                                 list->data[index].value.name, list->data[index].value.index, list->data[index].next);
+                                 (list->data[index].value.type == VariableType) ? list->data[index].value.elem.name : list->data[index].value.elem.mark,
+                                 list->data[index].value.type, list->data[index].next);
         
         if (index > 0) fprintf(dump_file, "    node%lu -> node%lu;\n", index - 1, index);
     }

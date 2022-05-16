@@ -4,7 +4,7 @@ Danse Macabre
 
     Forte FUCK(y, x+y+z, 64*FUCK(x));
 
-    Fine 0;
+    Fine (a * b) * c + d + e * f;
 }
 
 Opus FUCK(x, y, z)

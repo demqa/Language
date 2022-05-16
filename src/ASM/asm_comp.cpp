@@ -260,121 +260,48 @@ int FillTree(const char *filename, Tree_t *tree)
 }
 
 // REWORK
-int PushInNametable(Node_t *node, List_t *NT)
+int GenerateScan(Node_t *node, Backend *back)
 {
-    int status = NodeVerify(node);
-    CATCH_ERR;
-    status = ListVerify(NT);
-    CATCH_ERR;
 
-    Name_t name  = {};
-
-    // TODO:
-    // use index to save normal index in RAM
-
-    memcpy(name.name, node->value->arg.id, sizeof(node->value->arg.id));
-
-    status = ListPushBack(NT, name);
-    CATCH_ERR;
-
-    return status;
-}
-
-// REWORK
-int IndexNametable(Node_t *node, List_t *NT, size_t *index)
-{
-    int status = NodeVerify(node);
-    CATCH_ERR;
-    status = ListVerify(NT);
-    CATCH_ERR;
-    if (index == nullptr) return ASMcmp::PTR_IS_NULL;
-
-    if (node->value->type != ID_TYPE)
-    {
-        status = ASMcmp::CANT_FIND_NON_ID_IN_NT;
-        CATCH_ERR;
-    }
-
-    size_t number = ListValueIndex(NT, node->value->arg.id);
-    if (number == 0)
-    {
-        status = ASMcmp::VARIABLE_NOT_FOUND;
-        CATCH_ERR;
-    }
-
-    *index = number;
-
-    return status;
-}
-
-// \brief Returns ASMcmp::VARIABLE_FOUND
-//        if found, 0 if ok, error code if error
-int SearchInNametable(Node_t *node, List_t *NT)
-{
-    int status = NodeVerify(node);
-    CATCH_ERR;
-    status = ListVerify(NT);
-    CATCH_ERR;
-
-    size_t index = ListValueIndex(NT, node->value->arg.id);
-    if (index != 0)
-    {
-        return ASMcmp::VARIABLE_FOUND;
-    }
-
-    return ASMcmp::FUNC_IS_OK;
-}
-
-static FILE   *out       = nullptr;
-static Node_t *node_main = nullptr;
-
-// REWORK
-int GenerateScan(Node_t *node, List_t *NT, List_t *GlobalNT)
-{
-    CHECK_NODES_N_LISTS;
 
     PRINT_(NOT_IMPLEMENTED);
 
-//     fprintf(out, "IN\n");
-
-//     status = GenerateExpr(node->right, NT, GlobalNT);
-//     CATCH_ERR;
-
     return status;
 }
 
 // REWORK
-int GeneratePrint(Node_t *node, List_t *NT, List_t *GlobalNT)
-{
-    CHECK_NODES_N_LISTS;
-
-    if (node->right == nullptr) return ASMcmp::PRINT_DOESNT_HAVE_ARG;
-
-    status = GenerateExpr(node->right, NT, GlobalNT);
-    CATCH_ERR;
-
-    fprintf(out, "OUT\n");
-    fprintf(out, "POP dx\n");
-
-    return status;
-}
-
-// REWORK
-int GenerateAssign(Node_t *node, List_t *NT, List_t *GlobalNT)
+int GeneratePrint(Node_t *node, Backend *back)
 {
     int status = NodeVerify(node);
     CATCH_ERR;
-    status = ListVerify(GlobalNT);
+    status = LocalBackendVerify(back);
     CATCH_ERR;
 
-    if (NT == nullptr)
+    if (node->right == nullptr) return ASMcmp::PRINT_DOESNT_HAVE_ARG;
+
+    status = GenerateExpr(node->right, back);
+    CATCH_ERR;
+
+    status = Encode(back, PRINT);
+    CATCH_ERR;
+
+    return status;
+}
+
+// DONE
+int GenerateAssign(Node_t *node, Backend *back)
+{
+    int status = NodeVerify(node);
+    CATCH_ERR;
+
+    if (back->NT == nullptr)
     {
-        status = InitGlobVar(node, GlobalNT);
+        status = InitGlobVar(node, back);
         CATCH_ERR;
     }
     else
     {
-        status = InitVar(node, NT, GlobalNT);
+        status = InitVar(node, back);
         CATCH_ERR;
     }
 
@@ -382,25 +309,27 @@ int GenerateAssign(Node_t *node, List_t *NT, List_t *GlobalNT)
 }
 
 // REWORK
-int GenerateStmt  (Node_t *node, List_t *NT, List_t *GlobalNT)
+int GenerateStmt(Node_t *node, Backend *back)
 {
-    CHECK_NODES_N_LISTS;
-    PRINT_X(status);
+    int status = NodeVerify(node);
+    CATCH_ERR;
+    status = LocalBackendVerify(back);
+    CATCH_ERR;
 
     switch (KEYW(node))
     {
-        case KEYW_ASSIGN: status = GenerateAssign(node, NT, GlobalNT); break;
-        case KEYW_IF:     status = GenerateIf    (node, NT, GlobalNT); break;
-        case KEYW_WHILE:  status = GenerateWhile (node, NT, GlobalNT); break;
-        case KEYW_CALL:   status = GenerateCall  (node, NT, GlobalNT); break;
-        case KEYW_RETURN: status = GenerateReturn(node, NT, GlobalNT); break;
-        case KEYW_SCAN:   status = GenerateScan  (node, NT, GlobalNT); break;
-        case KEYW_PRINT:  status = GeneratePrint (node, NT, GlobalNT); break;
+        case KEYW_ASSIGN: status = GenerateAssign(node, back); break;
+        case KEYW_IF:     status = GenerateIf    (node, back); break;
+        case KEYW_WHILE:  status = GenerateWhile (node, back); break;
+        case KEYW_CALL:   status = GenerateCall  (node, back); break;
+        case KEYW_RETURN: status = GenerateReturn(node, back); break;
+        case KEYW_SCAN:   status = GenerateScan  (node, back); break;
+        case KEYW_PRINT:  status = GeneratePrint (node, back); break;
         case KEYW_ADD:
         case KEYW_SUB:
         case KEYW_MUL:
         case KEYW_DIV:
-        case KEYW_POW:    status = GenerateExpr  (node, NT, GlobalNT); break;
+        case KEYW_POW:    status = GenerateExpr  (node, back); break;
 
 
         default:
@@ -414,9 +343,12 @@ int GenerateStmt  (Node_t *node, List_t *NT, List_t *GlobalNT)
 }
 
 // REWORK
-int GenerateStmts (Node_t *node, List_t *NT, List_t *GlobalNT)
+int GenerateStmts (Node_t *node, Backend *back)
 {
-    CHECK_NODES_N_LISTS;
+    int status = NodeVerify(node);
+    CATCH_ERR;
+    status = LocalBackendVerify(back);
+    CATCH_ERR;
 
     if (!NODE_KEYW(node, KEYW_STMT)) return ASMcmp::INVALID_STMT;
 
@@ -1260,16 +1192,50 @@ int BackendVerify(Backend *back, int mode)
 {
     if (back == nullptr) return ASMcmp::BACK_IS_NULL;
 
-    if (back->asm_file == nullptr) return ASMcmp::ASM_FILE_NULL;
-    if (back->lst_file == nullptr) return ASMcmp::LST_FILE_NULL;
+    // if (back->asm_file == nullptr) return ASMcmp::ASM_FILE_NULL;
+    // if (back->lst_file == nullptr) return ASMcmp::LST_FILE_NULL;
 
-    if ()
+    int status = 0;
+
+    return status;
+}
+
+int GenerateCallMain(Backend *back)
+{
+    int status = BackendVerify(back, GLOBAL);
+    CATCH_ERR;
+
+    // call main
+    // mov rax, 0x3C           ; Terminate Function 0x3C
+    // xor rdi, rdi
+    // syscall
+
+    status = Encode(back, CALL);
+    CATCH_ERR;
+
+    // Store this code_ptr in labels, that I will fill later.
+    Val_t label = {};
+
+    label.type  = DestinLabel;
+
+    label.elem.code_ptr =  back->buff_ptr;
+    label.elem.mark     = (char *) "main";
+
+    status = ListPushBack(&back->labelsDest, label);
+    CATCH_ERR;
+
+    status = Encode(back, EMPTY_ADDR);
+    CATCH_ERR;
+
+    status = Encode(back, TERMINATE);
+    CATCH_ERR;
+
+    return status;
 }
 
 // REWORK
 int GenerateGS(Node_t *node, Backend *back)
 {
-    if (out == nullptr) return ASMcmp::OUT_STREAM_IS_NULL;
     int status = NodeVerify(node);
     CATCH_ERR;
     status = BackendVerify(back, GLOBAL);
@@ -1277,8 +1243,8 @@ int GenerateGS(Node_t *node, Backend *back)
 
     if (!NODE_KEYW(node, KEYW_STMT)) return ASMcmp::GLOBAL_STMTS_ARE_NOT_STMTS;
 
-    fprintf(out, "CALL main:\n");
-    fprintf(out, "HLT\n");
+    status = GenerateCallMain(back);
+    CATCH_ERR;
 
     while (node->left) node = node->left;
     // IM AT BOTTOM STMT
@@ -1290,16 +1256,16 @@ int GenerateGS(Node_t *node, Backend *back)
     {
         if (KEYW(node->right) == KEYW_ASSIGN)
         {
-            status = GenerateAssign(node, nullptr, GlobalNT);
+            status = GenerateAssign(node, back);
             CATCH_ERR;
         }
         node = node->parent;
     }
 
-    List_t *NT = (List_t *) calloc(1, sizeof(List_t));
-    if (NT == nullptr) return ASMcmp::BAD_ALLOC;
+    back->NT = (List_t *) calloc(1, sizeof(List_t));
+    if (back->NT == nullptr) return ASMcmp::BAD_ALLOC;
 
-    status = ListCtor(NT, ASMcmp::INITIAL_CAPACITY);
+    status = ListCtor(back->NT, ASMcmp::INITIAL_CAPACITY);
     CATCH_ERR;
 
     node = bottom;
@@ -1309,7 +1275,7 @@ int GenerateGS(Node_t *node, Backend *back)
     {
         if (NODE_KEYW(node->right, KEYW_DEFINE))
         {
-            status = GenerateFuncDef(node->right, NT, GlobalNT);
+            status = GenerateFuncDef(node->right, back);
             CATCH_ERR;
         }
         else
@@ -1341,47 +1307,49 @@ int GenerateGS(Node_t *node, Backend *back)
     return status;
 }
 
-size_t max(size_t left, size_t right)
-{
-    if (left > right) return  left;
-    else              return right;
-}
+// size_t max(size_t left, size_t right)
+// {
+//     if (left > right) return  left;
+//     else              return right;
+// }
 
-int InitOutput(Backend *back, const char *filename)
-{
-    if (back     == nullptr) return ASMcmp::BACK_IS_NULL;
-    if (filename == nullptr) return ASMcmp::FILENAME_IS_NULL;
+// int InitOutput(Backend *back/*, const char *filename */)
+// {
+//     if (back     == nullptr) return ASMcmp::BACK_IS_NULL;
+//     if (filename == nullptr) return ASMcmp::FILENAME_IS_NULL;
 
-    const char *asm_fmt = ".asm";
-    const char *lst_fmt = ".lst";
+//     char *buffer = (char *) calloc(TreeSize(), )
 
-    size_t max_fmt_length = max(strlen(asm_fmt), strlen(lst_fmt));
+    // const char *asm_fmt = ".asm";
+    // const char *lst_fmt = ".lst";
 
-    size_t length = strlen(filename);
-    if (length > 32) return ASMcmp::FILENAME_IS_TOO_BIG;
+    // size_t max_fmt_length = max(strlen(asm_fmt), strlen(lst_fmt));
 
-    // new filename is filename + ".asm"/".lst"
-    char *new_name = (char *) calloc(length + max_fmt_length + 1, sizeof(char));
-    if (new_name == nullptr) return ASMcmp::BAD_ALLOC;
+    // size_t length = strlen(filename);
+    // if (length > 32) return ASMcmp::FILENAME_IS_TOO_BIG;
 
-    memcpy(new_name, filename, length);
+    // // new filename is filename + ".asm"/".lst"
+    // char *new_name = (char *) calloc(length + max_fmt_length + 1, sizeof(char));
+    // if (new_name == nullptr) return ASMcmp::BAD_ALLOC;
 
-    int status = 0;
+    // memcpy(new_name, filename, length);
 
-    memcpy(new_name + length, asm_fmt, strlen(asm_fmt) + 1);
-                                                    // + 1 is \0
+    // int status = 0;
 
-    status = OpenFile(new_name, &back->asm_file, "w");
-    CATCH_ERR;
+    // memcpy(new_name + length, asm_fmt, strlen(asm_fmt) + 1);
+    //                                                 // + 1 is \0
 
-    memcpy(new_name + length, lst_fmt, strlen(lst_fmt) + 1);
-                                                    // + 1 is \0
+    // status = OpenFile(new_name, &back->asm_file, "w");
+    // CATCH_ERR;
 
-    status = OpenFile(new_name, &back->lst_file, "w");
-    CATCH_ERR;
+    // memcpy(new_name + length, lst_fmt, strlen(lst_fmt) + 1);
+    //                                                 // + 1 is \0
 
-    return status;
-}
+    // status = OpenFile(new_name, &back->lst_file, "w");
+    // CATCH_ERR;
+
+//     return status;
+// }
 
 int TermOutput(Backend *back)
 {
@@ -1389,13 +1357,26 @@ int TermOutput(Backend *back)
 
     int status = 0;
 
-    if (back->asm_file) fclose(back->asm_file);
-    back->asm_file = nullptr;
+    // if (back->asm_file) fclose(back->asm_file);
+    // back->asm_file = nullptr;
 
-    if (back->lst_file) fclose(back->lst_file);
-    back->lst_file = nullptr;
+    // if (back->lst_file) fclose(back->lst_file);
+    // back->lst_file = nullptr;
 
     return status;
+}
+
+// DONE
+size_t TreeSize(Node_t *node)
+{
+    if (node == nullptr) return 0;
+
+    size_t count = 0;
+
+    if (node->left)  count += TreeSize(node->left);
+    if (node->right) count += TreeSize(node->right);
+
+    return count + 1;
 }
 
 // DONE
@@ -1408,11 +1389,17 @@ int GenerateASM(const char *filename, Tree_t *tree)
     Backend *back = (Backend *) calloc(1, sizeof(Backend));
     if (back == nullptr) return ASMcmp::BAD_ALLOC;
 
-    status = InitOutput(back, filename);
-    CATCH_ERR;
+    // status = InitOutput(back /*, filename */ );
+    // CATCH_ERR;
+
+    back->buff_ptr  = 0;
+    back->buff_size = TreeSize(tree->root) * sizeof(uint64_t) * 2;
+
+    back->code_buff = (char *) calloc(back->buff_size, sizeof(char));
+    if (back->code_buff == nullptr) return ASMcmp::BAD_ALLOC;
 
     back->GlobalNT = (List_t *) calloc(1, sizeof(List_t));
-    if (back->GlobalNT == nullptr) return ASMcmp::BAD_ALLOC;
+    if (back->GlobalNT  == nullptr) return ASMcmp::BAD_ALLOC;
 
     status = ListCtor(back->GlobalNT, ASMcmp::INITIAL_CAPACITY);
     CATCH_ERR;
