@@ -78,7 +78,7 @@ struct Backend
     char  *code_buff;
     size_t buff_ptr;
     size_t buff_size;
-}
+};
 
 
 int InitEmptyNode(Node_t **node_);
