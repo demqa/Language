@@ -16,9 +16,9 @@ int main()
         PRINT_X(status);
     }
 
-    TreeDump(tree);
+    // TreeDump(tree);
 
-    status = GenerateASM("../code/asm", tree);
+    status = EmitASM("../code/asm_log", tree);
     if (status)
     {
         PRINT_D(status);

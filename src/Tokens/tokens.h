@@ -3,7 +3,7 @@
 
 #include <assert.h>
 #include <string.h>
-#include <cmath>
+#include <math.h>
 #include <ctype.h>
 #include "tokens_config.h"
 

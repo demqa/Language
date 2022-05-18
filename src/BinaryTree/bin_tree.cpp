@@ -294,6 +294,18 @@ TreeStatus TreeVerify      (Tree_t *tree)
     return tree->status;
 }
 
+size_t TreeSize(Node_t *node)
+{
+    if (node == nullptr) return 0;
+
+    size_t count = 0;
+
+    if (node->left)  count += TreeSize(node->left);
+    if (node->right) count += TreeSize(node->right);
+
+    return count + 1;
+}
+
 extern FILE *TREE_LOG_FILE_DEFAULT = stderr;
 extern Tree_t *ttree = nullptr;
 

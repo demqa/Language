@@ -588,26 +588,23 @@ StatusCode ListClear   (List_t *list)
 
 // returns physical index when found
 // returns 0 if not found or there is some error
-size_t     ListValueIndex(List_t *list, Val_t value)
+size_t     ListValueIndex(List_t *list, int64_t hash)
 {
     if (ListVerify(list) != LIST_IS_OK)
         return 0;
     
     size_t elem = list->front;
 
-    if (value.type == VariableType)
+    while (elem)
     {
-        while (elem != 0 && strcmp(list->data[elem].value.elem.name, value.elem.name) != 0)
-            elem = list->data[elem].next;
-    }
-    else
-    if (value.type == DestinLabel ||
-        value.type == SourceLabel)
-    {
-        while (elem != 0 && strcmp(list->data[elem].value.elem.mark, value.elem.mark) != 0)
-            elem = list->data[elem].next;
-    }
+        if (list->data[elem].value.hash == hash)
+        {
+            PRINT(NOT_EXACT_COMPARING_HASH);
+            return elem;
+        }
 
+        elem = list->data[elem].next;
+    }
 
     return elem;
 }
@@ -661,7 +658,7 @@ StatusCode ListVerify(List_t *list)
     if (list->data[0].next  != 0 ||
         list->data[0].prev  != 0 ||
         // func empty elem
-        list->data[0].value.type != 0 && list->data[0].value.elem.name[0] != '\0')
+        list->data[0].value.type != 0 && list->data[0].value.offset != 0)
         error |= LIST_ZERO_INDEX_VAL_RUINED;
 
     if (error != LIST_IS_OK)
@@ -863,12 +860,26 @@ StatusCode ListDump(List_t *list)
 
     for (size_t index = 0; index <= list->capacity; ++index)
     {
+        // Yes it is bad, but I dont care right now.
+        auto value = list->data[index].value;
+
         fprintf(dump_file, "    node%lu [fillcolor=\"%s\","
-                           "label=\" %lu | { <p> %lu | %s %lu | <n> %lu}\"];\n",
+                           "label=\" %lu | { <p> %lu | ",
                                 index, ColorPicker(list, index), index,
-                                (list->data[index].prev == FREE_INDEX) ? -1 : list->data[index].prev,
-                                 (list->data[index].value.type == VariableType) ? list->data[index].value.elem.name : list->data[index].value.elem.mark,
-                                 list->data[index].value.type, list->data[index].next);
+                                (list->data[index].prev == FREE_INDEX) ? -1 : list->data[index].prev);
+
+        if (value.type == Variable_t)
+            fprintf(dump_file, "VAR  %s ",    value.elem.variable);
+        else
+        if (value.type == Function_t)
+            fprintf(dump_file, "FUNC %s ",    value.elem.func_ptr);
+        else
+        if (value.type == Keyword_t)
+            fprintf(dump_file, "KEYW %x %d ", value.elem.keyword_id, value.elem.number);
+        else
+            fprintf(dump_file, "DEAD_TYPE ");
+
+        fprintf(dump_file, "%ld | <n> %lu}\"];\n", value.offset, list->data[index].next);
         
         if (index > 0) fprintf(dump_file, "    node%lu -> node%lu;\n", index - 1, index);
     }

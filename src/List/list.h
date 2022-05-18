@@ -117,6 +117,7 @@ Val_t      ListPopFront (List_t *list);
 StatusCode ListIsEmpty     (List_t *list);
 StatusCode ListIsDestructed(List_t *list);
 
-StatusCode ListPrintErr(List_t *list);
+StatusCode ListPrintErr  (List_t *list);
+size_t     ListValueIndex(List_t *list, int64_t hash);
 
 #endif // LIST_H
