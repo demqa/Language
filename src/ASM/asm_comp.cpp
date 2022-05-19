@@ -10,7 +10,12 @@
 #define NODE_ID(NODE) (NODE->value->type == ID_TYPE)
 #define KEYW(NODE) ((NODE->value->type == KEYW_TYPE) ? NODE->value->arg.key_w : 0)
 
-#define CHECK_NODES do { int status = NodeVerify(node); CATCH_ERR; } while (0)
+#define CHECK_NODES status = NodeVerify(node); CATCH_ERR
+
+// DEBUG TREE
+Tree_t tr33 = {};
+
+#define DUMP(NODE) do { tr33.root = NODE; TreeDump(&tr33); } while (0)
 
 // DONE
 int GetChild(char **ptr, Node_t **node)
@@ -302,7 +307,7 @@ int EmitByte(Backend *back, uint8_t byte)
     return 0;
 }
 
-int EmitDword(Backend *back, uint32_t dword) // this function is usually used to store dw address
+int __EmitDword(Backend *back, uint32_t dword) // this function is usually used to store dw address
 {
     int status = BackendVerify(back);
     CATCH_ERR;
@@ -333,8 +338,52 @@ int __EmitBytes(Backend *back, size_t number_of_items, ...)
     return 0;
 }
 
+// DONE
+int __EmitLog(Backend *back, const char *msg)
+{
+    int status = BackendVerify(back);
+    CATCH_ERR;
+
+    if (msg == nullptr)
+    {
+        PRINT(MSG_IS_NULLPTR);
+        return ASMcmp::MSG_IS_NULLPTR;
+    }
+
+    fprintf(back->asm_log, "\t%s\n", msg);
+
+    return status;
+}
+
+// DONE
+int __EmitLogFmt(Backend *back, const char *fmt, ...)
+{
+    int status = BackendVerify(back);
+    CATCH_ERR;
+
+    if (fmt == nullptr)
+    {
+        PRINT(FMT_IS_NULLPTR);
+        return ASMcmp::FMT_IS_NULLPTR;
+    }
+
+    va_list args = {};
+    va_start(args, fmt);
+
+     fprintf(back->asm_log, "\t");
+    vfprintf(back->asm_log, fmt, args);
+     fprintf(back->asm_log, "\n");
+
+    va_end(args);
+
+    return status;
+}
+
 #define __VA_COUNT__(...) (sizeof ((int[]) {0, ##__VA_ARGS__}) / sizeof (int) - 1)
-#define EmitBytes(__BACK__, ...) do { __EmitBytes(__BACK__, __VA_COUNT__(__VA_ARGS__), __VA_ARGS__); } while(0)
+#define EmitBytes(...)       do { __EmitBytes(back, __VA_COUNT__(__VA_ARGS__), __VA_ARGS__); } while(0)
+#define EmitDword(ARG)       do { __EmitDword(back, ARG);                                    } while(0)
+#define EmitLog(MSG)         do { __EmitLog(back, MSG);                                      } while(0)
+#define EmitLogFmt(FMT, ...) do { __EmitLogFmt(back, FMT, __VA_ARGS__);                      } while(0)
 
 #define NODE_KEYW(NODE, KEYW) (NODE->value->type == KEYW_TYPE && NODE->value->arg.key_w == KEYW)
 #define   NODE_ID(NODE)       (NODE->value->type == ID_TYPE)
@@ -361,7 +410,8 @@ int EmitFuncDef   (Node_t *node, Backend *back);
 int EmitMain      (Node_t *node, Backend *back);
 int EmitGlobExpr  (Node_t *node, Backend *back);
 
-int EmitMark      (Node_t *node);
+int EmitStackFrame(Node_t *node, Backend *back);
+int EmitMark      (Node_t *node, Backend *back);
 
 // int EmitGlobalVar (Node_t *node, Backend *back);
 // int IncreaseRSP   (Node_t *node, Backend *back);
@@ -397,31 +447,13 @@ int IsLogOper(Node_t *node)
     return node != nullptr && ((KEYW(node) != 0) && (KEYW(node) >= KEYW_EQUAL) && (KEYW(node) <= KEYW_OR));
 }
 
-// DONE
-int EmitLog(Backend *back, const char *msg)
-{
-    int status = BackendVerify(back);
-    CATCH_ERR;
-
-    if (msg == nullptr)
-    {
-        PRINT(MSG_IS_NULLPTR);
-        return ASMcmp::MSG_IS_NULLPTR;
-    }
-
-    fprintf(back->asm_log, "\t%s\n", msg);
-
-    return status;
-}
-
-
-
 // returns ASMcmp::VARIABLE_FOUND if found
 // returns 0 if not found
 size_t SearchVariable(Node_t *node, Backend *back)
 {
     int status = BackendVerify(back);
     CATCH_ERR;
+    CHECK_NODES;
 
     int64_t hash = HashCRC32(node->value->arg.id, WORD_MAX_LEN);
 
@@ -432,45 +464,77 @@ size_t SearchVariable(Node_t *node, Backend *back)
     return index;
 }
 
-// returns ASMcmp::VARIABLE_FOUND if found
-// returns 0 if not found
-size_t PushVariable(Node_t *node, Backend *back)
+int ClearVariables(Backend *back)
 {
     int status = BackendVerify(back);
     CATCH_ERR;
 
-    int64_t hash = HashCRC32(node->value->arg.id, WORD_MAX_LEN);
+    // TODO: global variables
+    status = ListClear(back->NT);
+    CATCH_ERR;
 
-    List_t *NT = back->NT;
-
-    Val_t value = {};
-    value.hash          = hash;
-    value.offset        = -16 + (-8) * NT->size;
-    value.elem.variable = node->value->arg.id;
-
-    // Now I think that collision chance is equal to zero, so
-    // I will compare only hashes.
-    size_t index = ListValueIndex(back->NT, hash);
-
-    return index;
+    return status;
 }
 
+int PushVariable(Node_t *node, Backend *back, int64_t offset)
+{
+    int status = BackendVerify(back);
+    CATCH_ERR;
+    CHECK_NODES;
+
+    int64_t hash = HashCRC32(node->value->arg.id, WORD_MAX_LEN);
+
+    List_t *NT   = back->NT;
+
+    Val_t value = {};
+    value.type  = Variable_t;
+    value.hash  = hash;
+
+    //
+    // TODO: make global variables, but now it is shit
+    value.offset        = offset;
+    value.elem.variable = node->value->arg.id;
+
+    status = ListPushBack(NT, value);
+    CATCH_ERR;
+
+    return status;
+}
+
+int RemoveVariables(Backend *back, size_t number_of_variables)
+{
+    int status = BackendVerify(back);
+    CATCH_ERR;
+
+    for (size_t index = 0; index < number_of_variables; ++index)
+    {
+        Val_t value = ListPopBack(back->NT);
+        if (value.type == DEAD_VALUE.type)
+        {
+            status = ASMcmp::DEAD_VALUE_REMOVED;
+            CATCH_ERR;
+        }
+    }
+
+    return status;
+}
 
 // DONE
 int EmitStmt(Node_t *node, Backend *back)
 {
     int status = NodeVerify(node);
     CATCH_ERR;
+    CHECK_NODES;
 
     switch (KEYW(node))
     {
         case KEYW_ASSIGN: status = EmitAssign(node, back); break;
-        case KEYW_IF:     status = EmitIf    (node, back); break;
-        case KEYW_WHILE:  status = EmitWhile (node, back); break;
-        case KEYW_CALL:   status = EmitCall  (node, back); break;
+        // case KEYW_IF:     status = EmitIf    (node, back); break;
+        // case KEYW_WHILE:  status = EmitWhile (node, back); break;
+        // case KEYW_CALL:   status = EmitCall  (node, back); break;
         case KEYW_RETURN: status = EmitReturn(node, back); break;
-        case KEYW_SCAN:   status = EmitScan  (node, back); break;
-        case KEYW_PRINT:  status = EmitPrint (node, back); break;
+        // case KEYW_SCAN:   status = EmitScan  (node, back); break;
+        // case KEYW_PRINT:  status = EmitPrint (node, back); break;
         case KEYW_ADD:
         case KEYW_SUB:
         case KEYW_MUL:
@@ -482,6 +546,8 @@ int EmitStmt(Node_t *node, Backend *back)
             break;
     }
 
+    EmitLog("\n");
+
     CATCH_ERR;
     return status;
 }
@@ -491,6 +557,7 @@ int EmitStmts(Node_t *node, Backend *back)
 {
     int status = NodeVerify(node);
     CATCH_ERR;
+    CHECK_NODES;
 
     if (!NODE_KEYW(node, KEYW_STMT)) return ASMcmp::INVALID_STMT;
 
@@ -539,40 +606,294 @@ int EmitStdLib   (Node_t *node, Backend *back);
 
 int EmitASM      (const char *filename, Tree_t *tree);
 
-
-
-
 int EmitDefParams(Node_t *node, Backend *back)
 {
     int status = BackendVerify(back);
     CATCH_ERR;
+    CHECK_NODES;
 
+    // TODO: delete it when I will make globals
     if (back->NT->size != 0)
     {
         status = ASMcmp::NAMETABLE_ISNT_CLEAR;
         CATCH_ERR;
     }
 
-    // pushing parameters in reverse order, like System V
-    while (node != nullptr)
+    // TODO: make functions without params
+    int number_of_params = 1;
+    for ( ; node->left; node = node->left, ++number_of_params);
+
+    // pushing parameters in nametable in direct order
+    while (NODE_KEYW(node, KEYW_PARAM))
     {
-        status = SearchInNametable(node->right, back);
-        if (status == ASMcmp::VARIABLE_FOUND) status = ASMcmp::VARIABLE_IS_ENGAGED;
+        assert(node->right != nullptr);
+
+        size_t index = SearchVariable(node->right, back);
+        if (index != 0) status = ASMcmp::VARIABLE_IS_ENGAGED;
         CATCH_ERR;
 
-        status = PushInNametable(node->right, back);
+        int64_t offset = -16 + (-8) * back->NT->size;
+
+        status = PushVariable(node->right, back, offset);
         CATCH_ERR;
 
-        node = node->left;
+        assert(node->parent != nullptr);
+        node = node->parent;
+    }
+
+    back->number_of_params = number_of_params;
+
+    return status;
+}
+
+// TODO: one day I will add global variables
+// DONE
+int EmitAssign(Node_t *node, Backend *back)
+{
+    int status = BackendVerify(back);
+    CATCH_ERR;
+    CHECK_NODES;
+
+    if (!NODE_KEYW(node, KEYW_ASSIGN))
+    {
+        status = ASMcmp::INVALID_ASSIGN;
+        CATCH_ERR;
+    }
+
+    size_t index = SearchVariable(node->left, back);
+    if (index != 0)
+    {
+        status = ASMcmp::VARIABLE_IS_ENGAGED;
+        CATCH_ERR;
+    }
+
+    size_t offset = 8 + (back->number_of_locals++) * 8;
+
+    status = EmitExpr(node->right, back);
+    CATCH_ERR;
+
+    EmitLogFmt("mov [rbp+%ld], rax", offset);
+
+    status = PushVariable(node->left, back, offset);
+    CATCH_ERR;
+
+    return status;
+}
+
+int EmitMathOper(Node_t *node, Backend *back)
+{
+    int status = BackendVerify(back);
+    CATCH_ERR;
+    CHECK_NODES;
+
+    if (!IsMathOper(node))
+    {
+        status = ASMcmp::IS_NOT_A_MATH_OPER;
+        CATCH_ERR;
+    }
+
+    EmitLog("mov rax, rcx");
+
+    switch (KEYW(node))
+    {
+        case KEYW_ADD: EmitLog("add rax, rdx"); break;
+        case KEYW_SUB: EmitLog("sub rax, rdx"); break;
+        case KEYW_MUL: EmitLog("mul rdx");      break;
+        case KEYW_DIV: EmitLog("div rdx");      break;
+
+        // case KEYW_POW: return EmitPow(node);
+
+        default:
+            status = ASMcmp::UNEXPECTED_MATH_OPER;
+            CATCH_ERR;
+            break;
+    }
+
+    EmitLog("\n");
+
+    return status;
+}
+
+int EmitNum(Node_t *node, Backend *back)
+{
+    int status = BackendVerify(back);
+    CATCH_ERR;
+    CHECK_NODES;
+
+    if (!IsNum(node))
+    {
+        status = ASMcmp::IS_NOT_A_NUMBER;
+        CATCH_ERR;
+    }
+
+    EmitLogFmt("mov rax, %d", node->value->arg.num);
+
+    return status;
+}
+
+int EmitVar(Node_t *node, Backend *back)
+{
+    int status = BackendVerify(back);
+    CATCH_ERR;
+    CHECK_NODES;
+
+    if (!IsVar(node))
+    {
+        status = ASMcmp::IS_NOT_A_VARIABLE;
+        CATCH_ERR;
+    }
+
+    size_t index = SearchVariable(node, back);
+    if (index == 0)
+    {
+        DUMP(node);
+        status = ASMcmp::VARIABLE_NOT_FOUND;
+        CATCH_ERR;
+    }
+
+    int64_t offset = back->NT->data[index].value.offset;
+
+    if (offset < 0)
+    {
+        // TODO: binary
+        EmitLogFmt("mov rax, [rbp%ld]",  offset);
+    }
+    else
+    {
+        // TODO: binary
+        EmitLogFmt("mov rax, [rbp+%ld]", offset);
     }
 
     return status;
+}
+
+int EmitExpr(Node_t *node, Backend *back)
+{
+    int status = BackendVerify(back);
+    CATCH_ERR;
+    CHECK_NODES;
+
+    if (KEYW(node) == KEYW_CALL)
+    {
+        PRINT(NOT_IMPLEMENTED);
+        // TODO:
+
+        // status = EmitCall(node, back);
+        // CATCH_ERR;
+        return status;
+    }
+
+    if (node->left && node->right)
+    {
+        status = EmitExpr(node->left, back);
+        CATCH_ERR;
+        EmitLog("mov rcx, rax");
+
+        status = EmitExpr(node->right, back);
+        CATCH_ERR;
+        EmitLog("mov rdx, rax");
+
+        if (!IsMathOper(node))
+        {
+            status = ASMcmp::INVALID_EXPRESSION;
+            CATCH_ERR;
+        }
+
+        status = EmitMathOper(node, back);
+        CATCH_ERR;
+    }
+    else
+    {
+        assert(node->left == nullptr && node->right == nullptr);
+
+        if (IsNum(node))
+        {
+            status = EmitNum(node, back);
+            CATCH_ERR;
+        }
+        else
+        if (IsVar(node))
+        {
+            status = EmitVar(node, back);
+            CATCH_ERR;
+        }
+        else
+        {
+            status = ASMcmp::UNDEFINED_OPERATOR;
+            CATCH_ERR;
+        }
+    }
+
+    return status;
+}
+
+int EmitReturn(Node_t *node, Backend *back)
+{
+    int status = BackendVerify(back);
+    CATCH_ERR;
+    CHECK_NODES;
+
+    if (!NODE_KEYW(node, KEYW_RETURN))
+    {
+        status = ASMcmp::RETURN_ISNT_RETURN;
+        CATCH_ERR;
+    }
+
+    status = EmitExpr(node->right, back);
+    CATCH_ERR;
+
+    EmitLog("pop rbp");
+    EmitLog("ret");
+
+    return status;
+}
+
+int EmitStackFrame(Backend *back)
+{
+    int status = BackendVerify(back);
+    CATCH_ERR;
+
+    EmitLog("push rbp");
+    EmitLog("mov rbp, rsp");
+    EmitLog("\n");
+
+    return status;
+}
+
+int EmitMark(Node_t *node, Backend *back)
+{
+    int status = BackendVerify(back);
+    CATCH_ERR;
+    CHECK_NODES;
+
+    if (NODE_ID(node))
+    {
+        // TODO: place func label in labels
+
+
+        EmitLogFmt("\n%s:", node->value->arg.id);
+        return status;
+    }
+    else
+    if (NODE_KEYW(node, KEYW_MAIN1))
+    {
+
+        // TODO: place main mark
+        EmitLog("\nmain:");
+        return status;
+    }
+
+    PRINT(ERROR_INVALID_TYPE_FOR_MARK);
+    return ASMcmp::INVALID_TYPE_FOR_MARK;
 }
 
 int EmitFuncDef(Node_t *node, Backend *back)
 {
     int status = BackendVerify(back);
     CATCH_ERR;
+    CHECK_NODES;
+
+    PRINT_LINE;
 
     Node_t *func = node->left;
     CATCH_NULL(func);
@@ -580,7 +901,7 @@ int EmitFuncDef(Node_t *node, Backend *back)
     Node_t *mark = func->left;
     CATCH_NULL(mark);
 
-    if (KEYW(node) == KEYW_MAIN1)
+    if (KEYW(func->left) == KEYW_MAIN1)
     {
         if (back->main == nullptr)
         {
@@ -594,10 +915,12 @@ int EmitFuncDef(Node_t *node, Backend *back)
         }
     }
 
-    status = EmitMark(mark);
+
+    status = EmitMark(mark, back);
     CATCH_ERR;
 
     Node_t *params = func->right;
+    CATCH_NULL(params);
 
     if (params != nullptr)
     {
@@ -608,8 +931,28 @@ int EmitFuncDef(Node_t *node, Backend *back)
     Node_t *stmts  = node->right;
     CATCH_NULL(stmts);
 
+    status = EmitStackFrame(back);
+    CATCH_ERR;
+
     status = EmitStmts(stmts, back);
     CATCH_ERR;
+
+    status = RemoveVariables(back, back->number_of_params + back->number_of_locals);
+    CATCH_ERR;
+
+    back->number_of_params = 0;
+    back->number_of_locals = 0;
+
+    return status;
+}
+
+int EmitMain(Node_t *node, Backend *back)
+{
+    int status = BackendVerify(back);
+    CATCH_ERR;
+    CHECK_NODES;
+
+    EmitLog(";; no main for now");
 
     return status;
 }
@@ -617,9 +960,9 @@ int EmitFuncDef(Node_t *node, Backend *back)
 int EmitGS(Node_t *node, Backend *back)
 {
     int status = BackendVerify(back);
-    return status;
-    status = NodeVerify(node);
     CATCH_ERR;
+    CHECK_NODES;
+
 
     if (!NODE_KEYW(node, KEYW_STMT)) return ASMcmp::GLOBAL_STMTS_ARE_NOT_STMTS;
 
@@ -641,6 +984,9 @@ int EmitGS(Node_t *node, Backend *back)
     //
     // node = bottom;
 
+    // ttree.root = node;
+    // TreeDump(&ttree);
+
     // IM AT BOTTOM STMT
     while (node != nullptr)
     {
@@ -654,6 +1000,9 @@ int EmitGS(Node_t *node, Backend *back)
         //     continue;
         // }
         // else
+
+        PRINT_LINE;
+
         if (NODE_KEYW(node->right, KEYW_DEFINE))
         {
             status = EmitFuncDef(node->right, back);
@@ -665,6 +1014,9 @@ int EmitGS(Node_t *node, Backend *back)
             status = ASMcmp::INVALID_GLOBAL_STMT;
             CATCH_ERR;
         }
+
+        status = ClearVariables(back);
+        CATCH_ERR;
 
         node = node->parent;
     }
@@ -682,11 +1034,12 @@ int EmitElf(Backend *back)
 
     //  Now there is no translation into elf. So.
 
-    // mov rax, 0xFFFFFF
-    EmitBytes(back, 0xB8);
-    EmitDword(back, 0xFFFFFF);
+    // // mov rax, 0xFFFFFF
+    // EmitBytes(0xB8);
+    // EmitDword(0xFFFFFF);
+
     // saving RET
-    EmitBytes(back, RET);
+    EmitBytes(RET);
 
     int pagesize = getpagesize();
 
@@ -710,6 +1063,22 @@ int EmitElf(Backend *back)
 
     int x = ((int(*)())code)();
     PRINT_X(x);
+
+    return status;
+}
+
+int EmitSysHeader(Backend *back)
+{
+    int status = BackendVerify(back);
+    CATCH_ERR;
+
+    EmitLog("\n\t.SECTION text");
+    EmitLog("\n_start:");
+    EmitLog("call main");
+
+    // TODO: make syscall 0x3C
+    EmitLog("ret");
+    EmitLog("\n;;--------------------------\n");
 
     return status;
 }
@@ -742,17 +1111,21 @@ int EmitASM(const char *filename, Tree_t *tree)
     status = ListCtor(back->NT, ASMcmp::INITIAL_CAPACITY);
     CATCH_ERR;
 
+    // status = TreeDump(tree);
+    // CATCH_ERR;
 
     status = EmitSysHeader(back);
     CATCH_ERR;
 
+    PRINT_LINE;
     status = EmitGS(tree->root, back);
     CATCH_ERR;
 
-    status = EmitElf(back);
-    CATCH_ERR;
+    PRINT_LINE;
+    // status = EmitElf(back);
+    // CATCH_ERR;
 
-
+    PRINT_LINE;
     status = ListDtor(back->NT);
     if (status == LIST_IS_DESTRUCTED) status = ASMcmp::FUNC_IS_OK;
     CATCH_ERR;
@@ -768,6 +1141,8 @@ int EmitASM(const char *filename, Tree_t *tree)
 
 #undef __VA_COUNT__
 #undef EmitBytes
+#undef EmitDword
+#undef EmitLog
 
 #undef NODE_KEYW
 #undef NODE_ID

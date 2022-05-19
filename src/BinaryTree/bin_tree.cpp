@@ -352,7 +352,7 @@ static void PrintNode      (const Node_t *node, const size_t *number_of_node, FI
     else
     if (node->value->type == NUM_TYPE)
     {
-        fprintf(dump_file, "%lg", node->value->arg.num);
+        fprintf(dump_file, "%ld", node->value->arg.num);
     }
     else
     if (node->value->type == KEYW_TYPE)

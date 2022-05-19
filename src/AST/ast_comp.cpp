@@ -1195,7 +1195,7 @@ int PoopNodes(const Node_t *node, FILE *stream /*, size_t *level */)
     else
     if (token->type == NUM_TYPE)
     {
-        fprintf(stream, "%lg", token->arg.num);
+        fprintf(stream, "%ld", token->arg.num);
     }
     else
     if (token->type == KEYW_TYPE)
@@ -1303,7 +1303,7 @@ int PrintToken(Tokens_t *tokens, size_t index)
     else
     if (token->type == NUM_TYPE)
     {
-        fprintf(stderr, "%lg\n", token->arg.num);
+        fprintf(stderr, "%ld\n", token->arg.num);
     }
     else
     if (token->type == KEYW_TYPE)

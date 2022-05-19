@@ -47,29 +47,29 @@ namespace ASMcmp
 
 // Nametable flags
         VARIABLE_FOUND             = 0x815,
-        VARIABLE_IS_ENGAGED        = 0x821,
-
 
 
         INVALID_GLOBAL_STMT        = 0x816,
-        // OUT_STREAM_IS_NULL         = 0x817,
-        // ANS_IS_NULL                = 0x818,
+        IS_NOT_A_NUMBER            = 0x817,
+        IS_NOT_A_MATH_OPER         = 0x818,
         INVALID_STMT               = 0x819,
-        // CANT_FIND_NON_ID_IN_NT     = 0x81A,
-        // VARIABLE_NOT_FOUND         = 0x81B,
-        // CANT_USE_FUNC_IN_GLOBAL    = 0x81C,
-        // UNDEFINED_OPERATOR         = 0x81D,
+        IS_NOT_A_VARIABLE          = 0x81A,
+        // CANT_FIND_NON_ID_IN_NT     = 0x81B,
+        VARIABLE_NOT_FOUND         = 0x81C,
+        UNDEFINED_OPERATOR         = 0x81D,
         REPEATING_MAIN             = 0x81E,
-        // CANT_USE_NON_ID_LIKE_MARK  = 0x81F,
+        INVALID_TYPE_FOR_MARK      = 0x81F,
         NAMETABLE_ISNT_CLEAR       = 0x820,
+        VARIABLE_IS_ENGAGED        = 0x821,
         // NO_MAIN_IN_PROGRAM         = 0x822,
-        // UNEXPECTED_MATH_OPER       = 0x823,
+        UNEXPECTED_MATH_OPER       = 0x823,
         // PRINT_DOESNT_HAVE_ARG      = 0x824,
         // NOT_LOG_OPER               = 0x825,
         // PARAM_ISNT_PARAM           = 0x826,
         // PARAM_ISNT_THE_ONLY        = 0x827,
         // NO_PARAMS                  = 0x828,
-        // RETURN_ISNT_RETURN         = 0x829,
+        RETURN_ISNT_RETURN         = 0x829,
+
 
 
         BACK_NULL                  = 0x82A,
@@ -79,6 +79,15 @@ namespace ASMcmp
         MPROTECT_FAILED            = 0x82D,
 
         FILE_CANT_BE_OPENED        = 0x82E,
+
+        MSG_IS_NULLPTR             = 0x82F,
+        FMT_IS_NULLPTR             = 0x830,
+        INVALID_EXPRESSION         = 0x831,
+
+
+        INVALID_ASSIGN             = 0x832,
+        DEAD_VALUE_REMOVED         = 0x833,
+
 
     };
 
@@ -100,6 +109,10 @@ struct Backend
     char  *code_buff;
     size_t buff_ptr;
     size_t buff_size;
+
+    size_t number_of_params;
+    size_t number_of_locals;
+
 };
 
 

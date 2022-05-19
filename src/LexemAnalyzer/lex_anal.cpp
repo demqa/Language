@@ -201,12 +201,11 @@ int GetToken  (char **ptr, Tokens_t *tokens)
     {
         token.type = NUM_TYPE;
 
-        double num = NAN;
-        int length = 0;
+        int64_t num = 0;
+        int  length = 0;
 
-        sscanf(*ptr, "%lf%n", &num, &length);
+        sscanf(*ptr, "%ld%n", &num, &length);
         if (length == 0)   return Tokens::SSCANF_CANT_SCAN;
-        if (num    == NAN) return Tokens::SSCANF_BAD_ALLOC;
         (*ptr) += length;
 
         token.arg.num = num;

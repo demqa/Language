@@ -50,7 +50,7 @@ struct Token_t
     union NodeType
     {
         int   key_w;
-        double  num;
+        int64_t num;
         char     id[WORD_MAX_LEN + 1] = {};
     } arg;
 };
