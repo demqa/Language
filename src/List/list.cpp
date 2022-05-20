@@ -149,7 +149,6 @@ size_t     ListNext  (List_t *list, size_t physical_index)
 }
 
 size_t     ListPrev  (List_t *list, size_t physical_index)
-
 {
     if (ListVerify(list) != LIST_IS_OK ||
         physical_index == 0            ||
@@ -826,7 +825,7 @@ StatusCode ListDump(List_t *list)
         return LIST_INDEXES_RUINED;
     }
 
-    FILE *dump_file = fopen("dump", "w");
+    FILE *dump_file = fopen("dumpList", "w");
 
     fputs("digraph structs {\n", dump_file);
 
@@ -864,7 +863,7 @@ StatusCode ListDump(List_t *list)
         auto value = list->data[index].value;
 
         fprintf(dump_file, "    node%lu [fillcolor=\"%s\","
-                           "label=\" %lu | { <p> %lu | ",
+                           "label=\" %lu | { <p> %ld | ",
                                 index, ColorPicker(list, index), index,
                                 (list->data[index].prev == FREE_INDEX) ? -1 : list->data[index].prev);
 
@@ -877,7 +876,7 @@ StatusCode ListDump(List_t *list)
         if (value.type == Keyword_t)
             fprintf(dump_file, "KEYW %x %d ", value.elem.keyword_id, value.elem.number);
         else
-            fprintf(dump_file, "DEAD_TYPE ");
+            fprintf(dump_file, "DEAD ");
 
         fprintf(dump_file, "%ld | <n> %lu}\"];\n", value.offset, list->data[index].next);
         
@@ -905,8 +904,8 @@ StatusCode ListDump(List_t *list)
 
     fclose(dump_file);
 
-    system("dot ../Dump/NTdump -T png -o ../Dump/NTdump.png");
-    system("eog ../Dump/NTdump.png");
+    system("dot dumpList -T png -o dumpList.png");
+    system("gwenview dumpList.png");
 
     return DUMPED;
 }

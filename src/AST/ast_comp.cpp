@@ -513,10 +513,10 @@ Node_t *GetPrint(Tokens_t *tokens, size_t *index)
     status = GetKeyword(tokens, index, &print_node, KEYW_PRINT);
     CATCH_ERR;
 
-    Node_t *expr = GetE(tokens, index);
-    CATCH_NULL(expr);
+    Node_t *params = GetCallParams(tokens, index);
+    CATCH_NULL(params);
 
-    status = ConnectNodes(print_node, expr, R_CHILD);
+    status = ConnectNodes(print_node, params, R_CHILD);
     CATCH_ERR;
 
     if (Require(tokens, index, KEYW_DOTPOT)) return nullptr;

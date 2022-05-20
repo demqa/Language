@@ -14,7 +14,6 @@
 
 // DEBUG TREE
 Tree_t tr33 = {};
-
 #define DUMP(NODE) do { tr33.root = NODE; TreeDump(&tr33); } while (0)
 
 // DONE
@@ -324,6 +323,24 @@ int __EmitDword(Backend *back, uint32_t dword) // this function is usually used 
     return 0;
 }
 
+int __EmitQword(Backend *back, uint64_t qword) // this function is usually used to store qword immediate
+{
+    int status = BackendVerify(back);
+    CATCH_ERR;
+
+    if (back->buff_ptr >= back->buff_size)
+    {
+        PRINT(END_OF_BUFFER_CANT_EMIT);
+        return ASMcmp::BUFF_OVERFLOW;
+    }
+
+    *((uint64_t *)(back->code_buff + back->buff_ptr)) = qword;
+    back->buff_ptr += 8;
+
+    return 0;
+}
+
+
 int __EmitBytes(Backend *back, size_t number_of_items, ...)
 {
     va_list arguments = {};
@@ -350,7 +367,7 @@ int __EmitLog(Backend *back, const char *msg)
         return ASMcmp::MSG_IS_NULLPTR;
     }
 
-    fprintf(back->asm_log, "\t%s\n", msg);
+    fprintf(back->asm_log, "    %s\n", msg);
 
     return status;
 }
@@ -370,7 +387,7 @@ int __EmitLogFmt(Backend *back, const char *fmt, ...)
     va_list args = {};
     va_start(args, fmt);
 
-     fprintf(back->asm_log, "\t");
+     fprintf(back->asm_log, "    ");
     vfprintf(back->asm_log, fmt, args);
      fprintf(back->asm_log, "\n");
 
@@ -379,11 +396,89 @@ int __EmitLogFmt(Backend *back, const char *fmt, ...)
     return status;
 }
 
-#define __VA_COUNT__(...) (sizeof ((int[]) {0, ##__VA_ARGS__}) / sizeof (int) - 1)
-#define EmitBytes(...)       do { __EmitBytes(back, __VA_COUNT__(__VA_ARGS__), __VA_ARGS__); } while(0)
-#define EmitDword(ARG)       do { __EmitDword(back, ARG);                                    } while(0)
-#define EmitLog(MSG)         do { __EmitLog(back, MSG);                                      } while(0)
-#define EmitLogFmt(FMT, ...) do { __EmitLogFmt(back, FMT, __VA_ARGS__);                      } while(0)
+
+#define __VA_COUNT__(...)    (sizeof ((int[]) {0, ##__VA_ARGS__}) / sizeof (int) - 1)
+#define EmitBytes(...)       do { __EmitBytes(back, __VA_COUNT__(__VA_ARGS__), __VA_ARGS__); } while (0)
+#define EmitDword(ARG)       do { __EmitDword(back, ARG);                                    } while (0)
+#define EmitQword(ARG)       do { __EmitQword(back, ARG);                                    } while (0)
+
+int __EmitLabelKeyw(Backend *back, int keyword_id, size_t counter, int labels_id)
+{
+    int status = BackendVerify(back);
+    CATCH_ERR;
+
+    Val_t value = {};
+    value.type = Keyword_t;
+
+    value.elem.keyword_id = keyword_id;
+    value.elem.number     = counter;
+    value.hash            = HashCRC32(&value.elem, sizeof(value.elem));
+
+    value.offset          = back->buff_ptr;
+
+    if (labels_id == DST_ID)
+    {
+        status = ListPushBack(back->LabelsDst, value);
+        CATCH_ERR;
+        EmitDword(0);
+    }
+    else
+    if (labels_id == SRC_ID)
+    {
+        status = ListPushBack(back->LabelsSrc, value);
+        CATCH_ERR;
+    }
+    else
+    {
+        status = ASMcmp::INVALID_LABEL_ID;
+        CATCH_ERR;
+    }
+
+    return status;
+}
+
+int __EmitLabelCall(Backend *back, const char *func_ptr, int labels_id)
+{
+    int status = BackendVerify(back);
+    CATCH_ERR;
+    if (func_ptr == nullptr){ status = ASMcmp::PTR_IS_NULL; CATCH_ERR; }
+
+    Val_t value = {};
+    value.type = Function_t;
+
+    value.hash = HashCRC32((void *) func_ptr, strlen(func_ptr));
+    value.elem.func_ptr =  (char *) func_ptr;
+
+    value.offset = back->buff_ptr;
+
+    if (labels_id == DST_ID)
+    {
+        status = ListPushBack(back->LabelsDst, value);
+        CATCH_ERR;
+        EmitDword(0);
+    }
+    else
+    if (labels_id == SRC_ID)
+    {
+        status = ListPushBack(back->LabelsSrc, value);
+        CATCH_ERR;
+    }
+    else
+    {
+        status = ASMcmp::INVALID_LABEL_ID;
+        CATCH_ERR;
+    }
+
+    return status;
+}
+
+#define EmitDstCall(FUNC)    do { __EmitLabelCall(back, FUNC,    DST_ID);                    } while (0)
+#define EmitSrcCall(FUNC)    do { __EmitLabelCall(back, FUNC,    SRC_ID);                    } while (0)
+#define EmitDstKeyw(KEYW, N) do { __EmitLabelKeyw(back, KEYW, N, DST_ID);                    } while (0)
+#define EmitSrcKeyw(KEYW, N) do { __EmitLabelKeyw(back, KEYW, N, SRC_ID);                    } while (0)
+
+#define EmitLog(MSG)         do { __EmitLog(back, MSG);                                      } while (0)
+#define EmitLogFmt(FMT, ...) do { __EmitLogFmt(back, FMT, __VA_ARGS__);                      } while (0)
 
 #define NODE_KEYW(NODE, KEYW) (NODE->value->type == KEYW_TYPE && NODE->value->arg.key_w == KEYW)
 #define   NODE_ID(NODE)       (NODE->value->type == ID_TYPE)
@@ -455,6 +550,12 @@ size_t SearchVariable(Node_t *node, Backend *back)
     CATCH_ERR;
     CHECK_NODES;
 
+    if (!IsVar(node))
+    {
+        status = ASMcmp::IS_NOT_A_VARIABLE;
+        CATCH_ERR;
+    }
+
     int64_t hash = HashCRC32(node->value->arg.id, WORD_MAX_LEN);
 
     // Now I think that collision chance is equal to zero, so
@@ -463,18 +564,6 @@ size_t SearchVariable(Node_t *node, Backend *back)
 
     return index;
 }
-
-// int ClearVariables(Backend *back)
-// {
-//     int status = BackendVerify(back);
-//     CATCH_ERR;
-
-//     // TODO: global variables
-//     status = ListClear(back->NT);
-//     CATCH_ERR;
-
-//     return status;
-// }
 
 int PushVariable(Node_t *node, Backend *back, int64_t offset)
 {
@@ -490,7 +579,6 @@ int PushVariable(Node_t *node, Backend *back, int64_t offset)
     value.type  = Variable_t;
     value.hash  = hash;
 
-    //
     // TODO: make global variables, but now it is shit
     value.offset        = offset;
     value.elem.variable = node->value->arg.id;
@@ -577,7 +665,6 @@ int EmitPrint     (Node_t *node, Backend *back);
 
 int EmitMathOper  (Node_t *node, Backend *back);
 int EmitNum       (Node_t *node, Backend *back);
-int EmitVarInit   (Node_t *node, Backend *back);
 int EmitVar       (Node_t *node, Backend *back);
 int EmitExpr      (Node_t *node, Backend *back);
 int EmitCallParams(Node_t *node, Backend *back);
@@ -586,17 +673,14 @@ int EmitJump      (Node_t *node, Backend *back);
 int EmitCond      (Node_t *node, Backend *back);
 int EmitIf        (Node_t *node, Backend *back);
 int EmitReturn    (Node_t *node, Backend *back);
+int EmitAssign    (Node_t *node, Backend *back);
 int EmitWhile     (Node_t *node, Backend *back);
 int EmitDefParams (Node_t *node, Backend *back);
 int EmitFuncDef   (Node_t *node, Backend *back);
 int EmitMain      (Node_t *node, Backend *back);
-int EmitGlobExpr  (Node_t *node, Backend *back);
+// int EmitGlobExpr  (Node_t *node, Backend *back);
 
 int EmitMark      (Node_t *node);
-
-// int EmitGlobalVar (Node_t *node, Backend *back);
-// int IncreaseRSP   (Node_t *node, Backend *back);
-// int DecreaseRSP   (Node_t *node, Backend *back);
 
 int EmitSysHeader(Backend *back);
 int EmitGS       (Node_t *node, Backend *back);
@@ -612,9 +696,8 @@ int EmitSavingRegisters(Backend *back)
     int status = BackendVerify(back);
     CATCH_ERR;
 
-    // TODO: binary
-    EmitLog("push rcx");
-    EmitLog("push rdx");
+    EmitLog("push rcx"); EmitBytes(PUSH | RCX);
+    EmitLog("push rbx"); EmitBytes(PUSH | RBX);
 
     return status;
 }
@@ -624,9 +707,8 @@ int EmitRestoringRegisters(Backend *back)
     int status = BackendVerify(back);
     CATCH_ERR;
 
-    // TODO: binary
-    EmitLog("pop rdx");
-    EmitLog("pop rcx");
+    EmitLog("pop rbx"); EmitBytes(POP | RBX);
+    EmitLog("pop rcx"); EmitBytes(POP | RCX);
 
     return status;
 }
@@ -646,17 +728,18 @@ int EmitJump(Node_t *node, Backend *back, int keyword_id, size_t counter)
     const char *jump_type[] = {"jmp", "jae", "ja", "je", "jne", "jb", "jbe"};
 
     size_t jump_index = 0;
+    int    jump_code  = 0;
 
     switch (KEYW(node))
     {
-        case KEYW_LESS:      jump_index = 1; break;
-        case KEYW_LESSOREQ:  jump_index = 2; break;
-        case KEYW_NOTEQUAL:  jump_index = 3; break;
-        case KEYW_EQUAL:     jump_index = 4; break;
-        case KEYW_GREATOREQ: jump_index = 5; break;
-        case KEYW_GREAT:     jump_index = 6; break;
+        case KEYW_LESS:      jump_index = 1; jump_code = JAE; break;
+        case KEYW_LESSOREQ:  jump_index = 2; jump_code = JA;  break;
+        case KEYW_NOTEQUAL:  jump_index = 3; jump_code = JE;  break;
+        case KEYW_EQUAL:     jump_index = 4; jump_code = JNE; break;
+        case KEYW_GREATOREQ: jump_index = 5; jump_code = JB;  break;
+        case KEYW_GREAT:     jump_index = 6; jump_code = JBE; break;
 
-        case KEYW_COMMA:     jump_index = 0; break;
+        case KEYW_COMMA:     jump_index = 0; jump_code = JMP; break;
 
         default:
             status = ASMcmp::UNDEFINED_OPERATOR;
@@ -683,9 +766,11 @@ int EmitJump(Node_t *node, Backend *back, int keyword_id, size_t counter)
             break;
     }
 
-    // TODO: binary
-    // TODO: binary
-    // TODO: binary
+    if (jump_code == JMP) EmitBytes(JMP);
+    else                  EmitBytes(JCOND, jump_code);
+
+    EmitDstKeyw(keyword_id, counter);
+
     EmitLogFmt("%s %s_%lu", jump_type[jump_index], appendix[appendix_index], counter);
     EmitLog("\n");
 
@@ -698,18 +783,15 @@ int EmitCond(Node_t *node, Backend *back, int keyword_id, size_t counter)
     CATCH_ERR;
     CHECK_NODES;
 
-    // TODO: binary
-    // TODO: binary
-    // TODO: binary
     status = EmitExpr(node->left,  back);
     CATCH_ERR;
-    EmitLog("mov rcx, rax");
+    EmitLog("mov rcx, rax"); EmitBytes(REX_W, MOV_RM, MOD_RR | RCX_DST | RAX_SRC);
 
     status = EmitExpr(node->right, back);
     CATCH_ERR;
-    EmitLog("mov rdx, rax");
+    EmitLog("mov rbx, rax"); EmitBytes(REX_W, MOV_RM, MOD_RR | RBX_DST | RAX_SRC);
 
-    EmitLog("cmp rcx, rdx");
+    EmitLog("cmp rcx, rbx"); EmitBytes(REX_W, CMP_RM, MOD_RR | RCX_DST | RBX_SRC);
     status = EmitJump(node, back, keyword_id, counter);
     CATCH_ERR;
 
@@ -735,9 +817,6 @@ int EmitIf(Node_t *node, Backend *back)
 
     size_t counter = ++back->if_counter;
 
-    // TODO: binary
-    // TODO: binary
-    // TODO: binary
     EmitLogFmt("\n;; empty mark IF number %lu", counter);
 
     if (else_stmts)
@@ -753,6 +832,7 @@ int EmitIf(Node_t *node, Backend *back)
         status = EmitJump(if_stmts, back, Keyword_if_end, counter);
         CATCH_ERR;
 
+        EmitSrcKeyw(Keyword_else, counter);
         EmitLogFmt("\nelse_%lu:", counter);
 
         status = EmitStmts(else_stmts, back);
@@ -767,6 +847,7 @@ int EmitIf(Node_t *node, Backend *back)
         CATCH_ERR;
     }
 
+    EmitSrcKeyw(Keyword_if_end, counter);
     EmitLogFmt("\nif_end_%lu:", counter);
 
     return status;
@@ -790,8 +871,7 @@ int EmitCallParams(Node_t *node, Backend *back)
         status = EmitExpr(node->right, back);
         CATCH_ERR;
 
-        // TODO: binary
-        EmitLog("push rax");
+        EmitLog("push rax"); EmitBytes(PUSH | RAX);
 
         node = node->left;
     }
@@ -806,8 +886,7 @@ int EmitPopParams(Node_t *node, Backend *back)
 
     while (node)
     {
-        // TODO: binary
-        EmitLog("pop rdx");
+        EmitLog("pop rbx"); EmitBytes(POP | RBX);
 
         node = node->left;
     }
@@ -821,8 +900,14 @@ int EmitCall(Node_t *node, Backend *back)
     CATCH_ERR;
     CHECK_NODES;
 
-    // TODO: binary
-    EmitLogFmt("sub rsp, %ld", back->number_of_locals * 8);
+    int64_t IM8 = back->number_of_locals * 8;
+    if (IM8 > 127 || IM8 < -128)
+    {
+        status = ASMcmp::ARG_OVERFLOW;
+        CATCH_ERR;
+    }
+
+    EmitLogFmt("sub rsp, %ld", IM8); EmitBytes(REX_W, SUB_RI8, MOD_RR | 0b00000000 | RSP_DST, (int) IM8);
     EmitLog("");
 
     status = EmitSavingRegisters(back);
@@ -840,8 +925,7 @@ int EmitCall(Node_t *node, Backend *back)
     Node_t *name = node->left;
     CATCH_NULL(name); assert(NODE_ID(name));
 
-    // TODO: binary
-    EmitLogFmt("call %s", name->value->arg.id);
+    EmitLogFmt("call %s", name->value->arg.id); EmitBytes(CALL); EmitDstCall(name->value->arg.id);
     EmitLog("\n");
 
     status = EmitPopParams(params, back);
@@ -852,9 +936,8 @@ int EmitCall(Node_t *node, Backend *back)
     status = EmitRestoringRegisters(back);
     CATCH_ERR;
 
-    // TODO: binary
     EmitLog("");
-    EmitLogFmt("add rsp, %ld", back->number_of_locals * 8);
+    EmitLogFmt("add rsp, %ld", IM8); EmitBytes(REX_W, ADD_RI8, MOD_RR | 0b00101000 | RSP_DST, (int) IM8);
     EmitLog("\n");
 
     return status;
@@ -874,6 +957,7 @@ int EmitWhile(Node_t *node, Backend *back)
 
     int counter = ++back->while_counter;
 
+    EmitSrcKeyw(Keyword_while, counter);
     EmitLogFmt("\nwhile_%lu:", counter);
 
     status = EmitCond(condition, back, Keyword_while_end, counter);
@@ -886,6 +970,7 @@ int EmitWhile(Node_t *node, Backend *back)
     status = EmitJump(while_stmts, back, Keyword_while, counter);
     CATCH_ERR;
 
+    EmitSrcKeyw(Keyword_while_end, counter);
     EmitLogFmt("\nwhile_end_%lu:", counter);
 
     return status;
@@ -901,6 +986,7 @@ int EmitDefParams(Node_t *node, Backend *back)
     // TODO: delete it when I will make globals
     if (back->NT->size != 0)
     {
+        // ListDump(back->NT);
         status = ASMcmp::NAMETABLE_ISNT_CLEAR;
         CATCH_ERR;
     }
@@ -917,7 +1003,7 @@ int EmitDefParams(Node_t *node, Backend *back)
         if (index != 0) status = ASMcmp::VARIABLE_IS_ENGAGED;
         CATCH_ERR;
 
-        int64_t offset = 16 + 8 * back->NT->size;
+        int64_t offset = 16 + 8 * (back->NT->size - back->number_of_locals);
 
         status = PushVariable(node->right, back, offset);
         CATCH_ERR;
@@ -945,22 +1031,30 @@ int EmitAssign(Node_t *node, Backend *back)
         CATCH_ERR;
     }
 
-    size_t offset = 0;
+    int64_t offset = 0;
     size_t index = SearchVariable(node->left, back);
     if (index != 0)
-        offset = (index - back->number_of_params) * -8;
+        offset = back->NT->data[index].value.offset;
     else
         offset = -8 + (back->number_of_locals++) * -8;
 
     status = EmitExpr(node->right, back);
     CATCH_ERR;
 
-    EmitLogFmt("mov [rbp%ld], rax", offset);
+    if (offset < 0)
+        EmitLogFmt("mov [rbp%ld], rax",  offset);
+    else
+        EmitLogFmt("mov [rbp+%ld], rax", offset);
+
+    EmitBytes(REX_W, MOV_RM, RBP_MR, (int) offset);
 
     EmitLog("\n");
 
-    status = PushVariable(node->left, back, offset);
-    CATCH_ERR;
+    if (index == 0)
+    {
+        status = PushVariable(node->left, back, offset);
+        CATCH_ERR;
+    }
 
     return status;
 }
@@ -977,14 +1071,14 @@ int EmitMathOper(Node_t *node, Backend *back)
         CATCH_ERR;
     }
 
-    EmitLog("mov rax, rcx");
+    EmitLog("mov rax, rcx"); EmitBytes(REX_W, MOV_RM, MOD_RR | RAX_DST | RCX_SRC);
 
     switch (KEYW(node))
     {
-        case KEYW_ADD: EmitLog("add rax, rdx"); break;
-        case KEYW_SUB: EmitLog("sub rax, rdx"); break;
-        case KEYW_MUL: EmitLog("mul rdx");      break;
-        case KEYW_DIV: EmitLog("div rdx");      break;
+        case KEYW_ADD: EmitLog("add rax, rbx"); EmitBytes(REX_W, ADD_RM, MOD_RR | RAX_SRC | RBX_DST); break;
+        case KEYW_SUB: EmitLog("sub rax, rbx"); EmitBytes(REX_W, SUB_RM, MOD_RR | RAX_SRC | RBX_DST); break;
+        case KEYW_MUL: EmitLog("imul rbx");     EmitBytes(REX_W, MUL_RM, MOD_RR | IMUL_AP | RBX_DST); break;
+        case KEYW_DIV: EmitLog("idiv rbx");     EmitBytes(REX_W, DIV_RM, MOD_RR | IDIV_AP | RBX_DST); break;
 
         // case KEYW_POW: return EmitPow(node);
 
@@ -1011,7 +1105,7 @@ int EmitNum(Node_t *node, Backend *back)
         CATCH_ERR;
     }
 
-    EmitLogFmt("mov rax, %d", node->value->arg.num);
+    EmitLogFmt("mov rax, %ld", node->value->arg.num); EmitBytes(REX_W, MOV_RI); EmitQword(node->value->arg.num);
 
     return status;
 }
@@ -1037,17 +1131,12 @@ int EmitVar(Node_t *node, Backend *back)
     }
 
     int64_t offset = back->NT->data[index].value.offset;
-
     if (offset < 0)
-    {
-        // TODO: binary
-        EmitLogFmt("mov rax, [rbp%ld]",  offset);
-    }
+        EmitLogFmt("mov rax, [rbp%ld]", offset);
     else
-    {
-        // TODO: binary
         EmitLogFmt("mov rax, [rbp+%ld]", offset);
-    }
+
+    EmitBytes(REX_W, MOV_MR, RBP_MR, (int) offset);
 
     return status;
 }
@@ -1070,13 +1159,13 @@ int EmitExpr(Node_t *node, Backend *back)
     {
         status = EmitExpr(node->left, back);
         CATCH_ERR;
-        // TODO: binary
-        EmitLog("mov rcx, rax");
+
+        EmitLog("mov rcx, rax"); EmitBytes(REX_W, MOV_RM, MOD_RR | RCX_DST | RAX_SRC);
 
         status = EmitExpr(node->right, back);
         CATCH_ERR;
-        // TODO: binary
-        EmitLog("mov rdx, rax");
+
+        EmitLog("mov rbx, rax"); EmitBytes(REX_W, MOV_RM, MOD_RR | RBX_DST | RAX_SRC);
 
         if (!IsMathOper(node))
         {
@@ -1127,9 +1216,8 @@ int EmitReturn(Node_t *node, Backend *back)
     status = EmitExpr(node->right, back);
     CATCH_ERR;
 
-    // TODO: binary
-    EmitLog("pop rbp");
-    EmitLog("ret");
+    EmitLog("pop rbp"); EmitBytes(POP | RBP);
+    EmitLog("ret");     EmitBytes(RET);
 
     return status;
 }
@@ -1139,9 +1227,8 @@ int EmitStackFrame(Backend *back)
     int status = BackendVerify(back);
     CATCH_ERR;
 
-    // TODO: binary
-    EmitLog("push rbp");
-    EmitLog("mov rbp, rsp");
+    EmitLog("push rbp");     EmitBytes(PUSH | RBP);
+    EmitLog("mov rbp, rsp"); EmitBytes(REX_W, MOV_RM, MOD_RR | RBP_DST | RSP_SRC);
     EmitLog("\n");
 
     return status;
@@ -1155,19 +1242,13 @@ int EmitMark(Node_t *node, Backend *back)
 
     if (NODE_ID(node))
     {
-        // TODO: place func label in labels
-        // TODO: binary
-
-        EmitLogFmt("\n%s:", node->value->arg.id);
+        EmitLogFmt("\n%s:", node->value->arg.id); EmitSrcCall(node->value->arg.id);
         return status;
     }
     else
     if (NODE_KEYW(node, KEYW_MAIN1))
     {
-        // TODO: place main mark
-        // TODO: binary
-
-        EmitLog("\nmain:");
+        EmitLog("\nmain:"); EmitSrcCall("main");
         return status;
     }
 
@@ -1236,7 +1317,34 @@ int EmitMain(Node_t *node, Backend *back)
     CATCH_ERR;
     CHECK_NODES;
 
-    EmitLog(";; no main for now");
+    if (back->main == nullptr)
+    {
+        status = ASMcmp::NO_MAIN_IN_PROGRAM;
+        CATCH_ERR;
+    }
+
+    Node_t *func = node->left;
+    CATCH_NULL(func);
+
+    Node_t *main = func->left;
+    CATCH_NULL(main);
+
+    status = EmitMark(main, back);
+    CATCH_ERR;
+
+    Node_t *stmts  = node->right;
+    CATCH_NULL(stmts);
+
+    status = EmitStackFrame(back);
+    CATCH_ERR;
+
+    status = EmitStmts(stmts, back);
+    CATCH_ERR;
+
+    status = RemoveVariables(back, back->number_of_locals);
+    CATCH_ERR;
+
+    back->number_of_locals = 0;
 
     return status;
 }
@@ -1302,19 +1410,37 @@ int EmitGS(Node_t *node, Backend *back)
     return status;
 }
 
+int BufferDump(Backend *back)
+{
+    int status = BackendVerify(back);
+    CATCH_ERR;
+
+    static int number = 0;
+
+    fprintf(stderr, "\n------------BUFFER DUMP BEG №%d-------------\n", number);
+
+    for (size_t index = 0; index < back->buff_ptr; ++index)
+    {
+        fprintf(stderr, "%02x", back->code_buff[index]);
+
+        if (index % 4  == 0) fprintf(stderr, "  ");
+
+        if (index % 16 == 0) fprintf(stderr, "\n");
+    }
+
+    fprintf(stderr, "\n------------BUFFER DUMP END №%d-------------\n", number);
+
+    number++;
+
+    return status;
+}
+
 int EmitElf(Backend *back)
 {
     int status = BackendVerify(back);
     CATCH_ERR;
 
     //  Now there is no translation into elf. So.
-
-    // mov rax, 0xFFFFFF
-    EmitBytes(0xB8);
-    EmitDword(0xFFFFFF);
-
-    // saving RET
-    EmitBytes(RET);
 
     int pagesize = getpagesize();
 
@@ -1329,12 +1455,14 @@ int EmitElf(Backend *back)
     for (size_t index = 0; index < back->buff_ptr; ++index)
         code[index] = back->code_buff[index];
 
-    status = mprotect(code, pagesize, PROT_EXEC); /* | PROT_WRITE | PROT_READ */
+    status = mprotect(code, pagesize, PROT_EXEC | PROT_WRITE | PROT_READ);
     if (status)
     {
         PRINT(MPROTECT_RETURNED_SHIT);
         return ASMcmp::MPROTECT_FAILED;
     }
+
+    BufferDump(back);
 
     int x = ((int(*)())code)();
     PRINT_X(x);
@@ -1347,19 +1475,53 @@ int EmitSysHeader(Backend *back)
     int status = BackendVerify(back);
     CATCH_ERR;
 
-    // TODO: binary
-    EmitLog("\n");
-    EmitLog(".SECTION text");
+    // NOTE: these commands are only
+    // for compilation with NASM.
+    EmitLog("\nGLOBAL _start\n");
+    EmitLog("SECTION .text");
     EmitLog("\n_start:");
-    EmitLog("call main");
 
-    // TODO: binary
-    // TODO: make syscall 0x3C
-    EmitLog("ret");
+    EmitLog("call main"); EmitBytes(CALL); EmitDstCall("main");
+
+
+    EmitLog("\n");
+    EmitLog("mov rax, 0x3C"); EmitBytes(MOV_RI); EmitDword(0x3C);
+    EmitLog("xor rdi, rdi");  EmitBytes(REX_W, XOR_RM, MOD_RR | RDI_DST | RDI_SRC);
+    EmitLog("syscall");       EmitBytes(0x0F, 0x05);
+
     EmitLog("\n;;--------------------------\n");
 
     return status;
 }
+
+int EmitLabels(Backend *back)
+{
+    int status = BackendVerify(back);
+    CATCH_ERR;
+
+    size_t elem = back->LabelsDst->front;
+
+    while (elem)
+    {
+        size_t index = ListValueIndex(back->LabelsSrc, back->LabelsDst->data[elem].value.hash);
+        if (index == 0)
+        {
+            status = ASMcmp::CANT_FIND_LABEL;
+            CATCH_ERR;
+        }
+
+        int64_t dst_offset = back->LabelsDst->data[elem].value.offset;
+
+        int64_t src_offset = back->LabelsSrc->data[index].value.offset;
+
+        *((int32_t *) (back->code_buff + dst_offset)) = src_offset - dst_offset - 4;
+
+        elem = ListNext(back->LabelsDst, elem);
+    }
+
+    return status;
+}
+
 
 int EmitASM(const char *filename, Tree_t *tree)
 {
@@ -1373,7 +1535,7 @@ int EmitASM(const char *filename, Tree_t *tree)
     back->buff_ptr  = 0;
     back->buff_size = TreeSize(tree->root) * sizeof(uint64_t) * 2;
 
-    back->code_buff = (char *) calloc(back->buff_size, sizeof(char));
+    back->code_buff = (uint8_t *) calloc(back->buff_size, sizeof(uint8_t));
     if (back->code_buff == nullptr) return ASMcmp::BAD_ALLOC;
 
     back->asm_log = fopen(filename, "w");
@@ -1383,24 +1545,53 @@ int EmitASM(const char *filename, Tree_t *tree)
         return ASMcmp::FILE_CANT_BE_OPENED;
     }
 
-    back->NT = (List_t *) calloc(1, sizeof(List_t));
-    if (back->NT == nullptr) return ASMcmp::BAD_ALLOC;
+    back->LabelsDst = (List_t *) calloc(1, sizeof(List_t));
+    if (back->LabelsDst == nullptr) return ASMcmp::BAD_ALLOC;
+
+    back->LabelsSrc = (List_t *) calloc(1, sizeof(List_t));
+    if (back->LabelsSrc == nullptr) return ASMcmp::BAD_ALLOC;
+
+    back->NT        = (List_t *) calloc(1, sizeof(List_t));
+    if (back->NT        == nullptr) return ASMcmp::BAD_ALLOC;
 
     status = ListCtor(back->NT, ASMcmp::INITIAL_CAPACITY);
+    CATCH_ERR;
+
+    status = ListCtor(back->LabelsDst, ASMcmp::INITIAL_CAPACITY);
+    CATCH_ERR;
+
+    status = ListCtor(back->LabelsSrc, ASMcmp::INITIAL_CAPACITY);
     CATCH_ERR;
 
 
     status = EmitSysHeader(back);
     CATCH_ERR;
 
+    BufferDump(back);
+
     status = EmitGS(tree->root, back);
     CATCH_ERR;
+
+    BufferDump(back);
+
+    status = EmitLabels(back);
+    CATCH_ERR;
+
+    BufferDump(back);
 
     status = EmitElf(back);
     CATCH_ERR;
 
 
     status = ListDtor(back->NT);
+    if (status == LIST_IS_DESTRUCTED) status = ASMcmp::FUNC_IS_OK;
+    CATCH_ERR;
+
+    status = ListDtor(back->LabelsDst);
+    if (status == LIST_IS_DESTRUCTED) status = ASMcmp::FUNC_IS_OK;
+    CATCH_ERR;
+
+    status = ListDtor(back->LabelsSrc);
     if (status == LIST_IS_DESTRUCTED) status = ASMcmp::FUNC_IS_OK;
     CATCH_ERR;
 

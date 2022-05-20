@@ -48,7 +48,6 @@ namespace ASMcmp
 // Nametable flags
         VARIABLE_FOUND             = 0x815,
 
-
         INVALID_GLOBAL_STMT        = 0x816,
         IS_NOT_A_NUMBER            = 0x817,
         IS_NOT_A_MATH_OPER         = 0x818,
@@ -61,7 +60,7 @@ namespace ASMcmp
         INVALID_TYPE_FOR_MARK      = 0x81F,
         NAMETABLE_ISNT_CLEAR       = 0x820,
         VARIABLE_IS_ENGAGED        = 0x821,
-        // NO_MAIN_IN_PROGRAM         = 0x822,
+        NO_MAIN_IN_PROGRAM         = 0x822,
         UNEXPECTED_MATH_OPER       = 0x823,
         // PRINT_DOESNT_HAVE_ARG      = 0x824,
         NOT_LOGICAL_OPER              = 0x825,
@@ -69,8 +68,6 @@ namespace ASMcmp
         // PARAM_ISNT_THE_ONLY        = 0x827,
         // NO_PARAMS                  = 0x828,
         RETURN_ISNT_RETURN         = 0x829,
-
-
 
         BACK_NULL                  = 0x82A,
         BUFF_OVERFLOW              = 0x82B,
@@ -91,6 +88,11 @@ namespace ASMcmp
         INVALID_CALL_PARAMS        = 0x834,
         INVALID_JUMP_KEYW_ID       = 0x835,
 
+        INVALID_LABEL_ID           = 0x836,
+        ARG_OVERFLOW               = 0x837,
+
+        CANT_FIND_LABEL            = 0x838,
+
     };
 
     const size_t INITIAL_CAPACITY = 16;
@@ -103,14 +105,14 @@ struct Backend
 
     FILE *asm_log;
 
-    List_t *LabelsDest;
-    List_t *LabelsSource;
+    List_t *LabelsDst;
+    List_t *LabelsSrc;
 
     Node_t *main;
 
-    char  *code_buff;
-    size_t buff_ptr;
-    size_t buff_size;
+    uint8_t *code_buff;
+    size_t   buff_ptr;
+    size_t   buff_size;
 
     size_t if_counter;
     size_t while_counter;
@@ -136,11 +138,87 @@ int EmitASM      (const char *filename, Tree_t *tree);
 int EmitElf      (Backend *back);
 int EmitLog      (Backend *back, const char *msg);
 
+enum LabelsId
+{
+    DST_ID = 1,
+    SRC_ID = 2,
+};
 
 enum OpCodes
 {
+    RAX   = 0b000,
+    RCX   = 0b001,
+    RDX   = 0b010,
+    RBX   = 0b011,
+    RSP   = 0b100,
+    RBP   = 0b101,
+    RSI   = 0b110,
+    RDI   = 0b011,
+
+    RAX_SRC = 0b00000000,
+    RCX_SRC = 0b00001000,
+    RDX_SRC = 0b00010000,
+    RBX_SRC = 0b00011000,
+    RSP_SRC = 0b00100000,
+    RBP_SRC = 0b00101000,
+    RSI_SRC = 0b00110000,
+    RDI_SRC = 0b00111000,
+
+    RAX_DST = 0b00000000,
+    RCX_DST = 0b00000001,
+    RDX_DST = 0b00000010,
+    RBX_DST = 0b00000011,
+    RSP_DST = 0b00000100,
+    RBP_DST = 0b00000101,
+    RSI_DST = 0b00000110,
+    RDI_DST = 0b00000111,
+
     RET   = 0xC3,
     REX   = 0x40,
+    REX_W = REX | 0b1000,
+    REX_B = REX | 0b0001,
+
+    MOD_RR  = 0b11000000,
+
+    PUSH    = 0x50,
+    POP     = 0x58,
+
+    CALL    = 0xE8,
+
+    JCOND   = 0x0F,
+    JAE     = 0x83,
+    JA      = 0x87,
+    JE      = 0x84,
+    JNE     = 0x85,
+    JB      = 0x82,
+    JBE     = 0x86,
+
+    JMP     = 0xE9,
+
+    MOV_RI  = 0xB8,
+    MOV_RM  = 0x89,
+    MOV_MR  = 0x8B,
+
+    RBP_MR  = 0x45,
+
+    XOR_RM  = 0x33,
+
+    CMP_RM  = 0x39,
+
+    ADD_RM  = 0x01,
+    SUB_RM  = 0x2B,
+
+    MUL_RM  = 0xF7,
+    DIV_RM  = 0xF7,
+
+    IDIV_AP = 0b00111000,
+     DIV_AP = 0b00110000,
+
+    IMUL_AP = 0b00101000,
+     MUL_AP = 0b00100000,
+
+    SUB_RI8 = 0x83,
+    ADD_RI8 = 0x83,
 
 };
 

@@ -466,8 +466,8 @@ while(0)
 
 TreeStatus TreeDump(Tree_t *tree)
 {
-    // int status = TreeVerify(tree);
-    int status = 0;
+    int status = TreeVerify(tree);
+    // int status = 0;
     if (status)
     {
         fprintf(TREE_LOG_FILE_DEFAULT, "CANT DUMP, TREE IS RUINED\n");
@@ -500,7 +500,7 @@ TreeStatus TreeDump(Tree_t *tree)
     }
 
     size_t number_of_node = 0;
-    FILE *dump_file = fopen("dump", "w");
+    FILE *dump_file = fopen("dumpTree", "w");
     if (dump_file == nullptr) return CANT_OPEN_DUMP_FILE;
 
     fputs("digraph structs {\n", dump_file);
@@ -512,8 +512,8 @@ TreeStatus TreeDump(Tree_t *tree)
 
     fclose(dump_file);
 
-    system("dot dump -T png -o dump.png");
-    system("gwenview dump.png");
+    system("dot dumpTree -T png -o dumpTree.png");
+    system("gwenview dumpTree.png");
 
     return (TreeStatus) status;
 }

@@ -109,6 +109,9 @@ StatusCode ListPushFront(List_t *list, Val_t value);
 size_t     ListFront(List_t *list);
 size_t     ListBack (List_t *list);
 
+size_t     ListNext  (List_t *list, size_t physical_index);
+size_t     ListPrev  (List_t *list, size_t physical_index);
+
 Val_t      ListRemove(List_t *list, size_t physical_index);
 
 Val_t      ListPopBack  (List_t *list);

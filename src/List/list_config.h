@@ -28,9 +28,9 @@ struct Name_t
         // In these two cases it proceeds equally, except of comparing...
         struct
         {
-            int keyword_id; // I can have more than one
-            int number;     // if/else/while etc.
-                            // so I have to differ it.
+            int    keyword_id; // I can have more than one
+            size_t number;     // if/else/while etc.
+                               // so I have to differ it.
         }; // Keyword
 
         struct
