@@ -731,7 +731,6 @@ Node_t *GetFuncDef(Tokens_t *tokens, size_t *index)
     if (!is_main)
     {
         params = GetFuncParams(tokens, index);
-        CATCH_NULL(params);
     }
 
     Node_t *stmts = GetStmts(tokens, index);
@@ -740,7 +739,7 @@ Node_t *GetFuncDef(Tokens_t *tokens, size_t *index)
     status = ConnectNodes(func, name, L_CHILD);
     CATCH_ERR;
 
-    if (!is_main)
+    if (!is_main && params != nullptr)
     {
         status = ConnectNodes(func, params, R_CHILD);
         CATCH_ERR;
@@ -765,6 +764,16 @@ Node_t *GetFuncParams(Tokens_t *tokens, size_t *index)
 
     if (Require(tokens, index, KEYW_OPRND)) return nullptr;
 
+    Token_t *token = nullptr;
+    status = TokensElem(tokens, *index, &token);
+    CATCH_ERR;
+
+    if (TOKEN_KEYW(KEYW_CLRND))
+    {
+        (*index)++;
+        return nullptr;
+    }
+
     Node_t *param = nullptr;
     status = InitKeyword(&param, KEYW_PARAM);
     CATCH_ERR;
@@ -775,7 +784,7 @@ Node_t *GetFuncParams(Tokens_t *tokens, size_t *index)
     status = ConnectNodes(param, var, R_CHILD);
     CATCH_ERR;
 
-    Token_t *token = nullptr;
+    token = nullptr;
     status = TokensElem(tokens, *index, &token);
     CATCH_ERR;
 
@@ -788,9 +797,9 @@ Node_t *GetFuncParams(Tokens_t *tokens, size_t *index)
 
         Node_t *param_new = nullptr;
         status = InitKeyword(&param_new, KEYW_PARAM);
-        CATCH_ERR;
 
         status = ConnectNodes(param_new, param, L_CHILD);
+        CATCH_ERR;
         CATCH_ERR;
 
         status = ConnectNodes(param_new,   var, R_CHILD);
@@ -815,6 +824,16 @@ Node_t *GetCallParams(Tokens_t *tokens, size_t *index)
 
     if (Require(tokens, index, KEYW_OPRND)) return nullptr;
 
+    Token_t *token = nullptr;
+    status = TokensElem(tokens, *index, &token);
+    CATCH_ERR;
+
+    if (TOKEN_KEYW(KEYW_CLRND))
+    {
+        (*index)++;
+        return nullptr;
+    }
+
     Node_t *param = nullptr;
     status = InitKeyword(&param, KEYW_PARAM);
     CATCH_ERR;
@@ -825,7 +844,7 @@ Node_t *GetCallParams(Tokens_t *tokens, size_t *index)
     status = ConnectNodes(param, expr, R_CHILD);
     CATCH_ERR;
 
-    Token_t *token = nullptr;
+    token = nullptr;
     status = TokensElem(tokens, *index, &token);
     CATCH_ERR;
 
@@ -1131,7 +1150,6 @@ Node_t *GetF(Tokens_t *tokens, size_t *index)
         CATCH_NULL(name);
 
         Node_t *params = GetCallParams(tokens, index);
-        CATCH_NULL(params);
 
         Node_t *call   = nullptr;
         status = InitKeyword(&call, KEYW_CALL);
@@ -1140,8 +1158,11 @@ Node_t *GetF(Tokens_t *tokens, size_t *index)
         status = ConnectNodes(call,   name, L_CHILD);
         CATCH_ERR;
 
-        status = ConnectNodes(call, params, R_CHILD);
-        CATCH_ERR;
+        if (params != nullptr)
+        {
+            status = ConnectNodes(call, params, R_CHILD);
+            CATCH_ERR;
+        }
 
         return call;
     }

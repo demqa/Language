@@ -64,7 +64,7 @@ namespace ASMcmp
         // NO_MAIN_IN_PROGRAM         = 0x822,
         UNEXPECTED_MATH_OPER       = 0x823,
         // PRINT_DOESNT_HAVE_ARG      = 0x824,
-        // NOT_LOG_OPER               = 0x825,
+        NOT_LOGICAL_OPER              = 0x825,
         // PARAM_ISNT_PARAM           = 0x826,
         // PARAM_ISNT_THE_ONLY        = 0x827,
         // NO_PARAMS                  = 0x828,
@@ -88,6 +88,8 @@ namespace ASMcmp
         INVALID_ASSIGN             = 0x832,
         DEAD_VALUE_REMOVED         = 0x833,
 
+        INVALID_CALL_PARAMS        = 0x834,
+        INVALID_JUMP_KEYW_ID       = 0x835,
 
     };
 
@@ -110,8 +112,12 @@ struct Backend
     size_t buff_ptr;
     size_t buff_size;
 
+    size_t if_counter;
+    size_t while_counter;
+
     size_t number_of_params;
     size_t number_of_locals;
+    size_t current_local;
 
 };
 

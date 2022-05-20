@@ -1,1 +1,1 @@
-{{{statement{{{main}function}define{statement{return{{{2}*{3}}+{5}}}}}}statement{{{'FUCK'}function{{{parameter{'a'}}parameter{'b'}}parameter{'c'}}}define{{statement{{'x'}={{'a'}+{'b'}}}}statement{return{{{{'a'}*{1}}*{2}}*{'c'}}}}}}statement{{{'baza'}function{parameter{'x'}}}define{statement{return{20}}}}}
+{{statement{{{main}function}define{statement{{'FUCKtorial'}call{parameter{7}}}}}}statement{{{'FUCKtorial'}function{parameter{'x'}}}define{{statement{{{'x'}<={1}}if{{statement{return{1}}}decision}}}statement{return{{'x'}*{{'FUCKtorial'}call{parameter{{'x'}-{1}}}}}}}}}

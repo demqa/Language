@@ -1,16 +1,15 @@
+
 Danse Macabre
 {
-    Fine 2 * 3 + 5;
+   FUCKtorial(7);
 }
 
-Opus FUCK(a, b, c)
+Opus FUCKtorial(x)
 {
-    x = a + b;
+    Piacere (x <= 1) Deciso
+    {
+        Fine 1;
+    }
 
-   Fine a * 1 * 2 * c;
-}
-
-Opus baza(x)
-{
-    Fine 20;
+    Fine x * FUCKtorial(x - 1);
 }

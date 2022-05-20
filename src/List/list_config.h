@@ -42,6 +42,15 @@ struct Name_t
     char segfault_guard = 0;
 };
 
+struct Keyword
+{
+    int keyword_id; // I can have more than one
+    int number;     // if/else/while etc.
+                    // so I have to differ it.
+}; // Keyword
+
+
+
 enum NameID
 {
     Variable_t = 0x7777,
