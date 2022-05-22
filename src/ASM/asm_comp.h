@@ -196,6 +196,8 @@ enum OpCodes
 
     MOD_RR  = 0b11000000,
 
+    CQO     = 0x99,
+
     PUSH    = 0x50,
     POP     = 0x58,
 
@@ -222,7 +224,7 @@ enum OpCodes
     CMP_RM  = 0x39,
 
     ADD_RM  = 0x01,
-    SUB_RM  = 0x2B,
+    SUB_RM  = 0x29,
 
     MUL_RM  = 0xF7,
     DIV_RM  = 0xF7,

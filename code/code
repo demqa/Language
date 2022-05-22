@@ -1,23 +1,68 @@
 
 Danse Macabre
 {
+   a = 0;
    b = 0;
+   c = 0;
 
+   Marcato a;
    Marcato b;
+   Marcato c;
 
-   Forte (F(FUCK(b)));
+   Kvadratka(a, b, c);
 
    Fine 0;
 }
 
-Opus F(y)
+Opus sqrt(x)
 {
-    Piacere (y <= 1) Deciso
+    y = 0;
+
+    Repetizione (y * y <= x)
     {
+        y = y + 1;
+    }
+
+    Fine y - 1;
+}
+
+Opus Kvadratka(a, b, c)
+{
+    Piacere (a == 0) Deciso
+    {
+        Forte(-999);
         Fine 1;
     }
 
-    Fine y * F(y - 1);
+    d = b * b - 4 * a * c;
+
+    Forte(d);
+
+    Piacere (d < 0) Deciso
+    {
+        Forte(-777);
+        Fine 2;
+    }
+
+    x = 0;
+
+    sq_d = sqrt(d);
+    Forte(sq_d);
+
+    Piacere (sq_d == 0) Deciso
+    {
+        x = -b / (2 * a);
+        Forte(x);
+
+        Fine 3;
+    }
+
+    x1 = (-b + sq_d) / (2 * a);
+    x2 = (-b - sq_d) / (2 * a);
+
+    Forte(x1, x2);
+
+    Fine 0;
 }
 
 Opus FUCK(x)

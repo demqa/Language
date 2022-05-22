@@ -17,23 +17,104 @@ _start:
 ;;--------------------------
 
     
-F:
+sqrt:
     push rbp
     mov rbp, rsp
     
 
-    sub rsp, 16
+    sub rsp, 8
+    
+    mov rax, 0
+    mov [rbp-8], rax
+    
+
+    
+while_1:
+    mov rax, [rbp-8]
+    push rax
+    mov rax, [rbp-8]
+    push rax
+    pop rbx
+    pop rcx
+    mov rax, rcx
+    cqo
+    imul rbx
+    
+
+    push rax
+    mov rax, [rbp+16]
+    push rax
+    pop rbx
+    pop rcx
+    cmp rcx, rbx
+    ja while_end_1
+    
+
+    mov rax, [rbp-8]
+    push rax
+    mov rax, 1
+    push rax
+    pop rbx
+    pop rcx
+    mov rax, rcx
+    add rax, rbx
+    
+
+    mov [rbp-8], rax
+    
+
+    jmp while_1
+    
+
+    
+while_end_1:
+    mov rax, [rbp-8]
+    push rax
+    mov rax, 1
+    push rax
+    pop rbx
+    pop rcx
+    mov rax, rcx
+    sub rax, rbx
+    
+
+    mov rsp, rbp
+    pop rbp
+    ret
+    
+
+    
+Kvadratka:
+    push rbp
+    mov rbp, rsp
+    
+
+    sub rsp, 40
     
     
 ;; empty mark IF number 1
     mov rax, [rbp+16]
-    mov rcx, rax
-    mov rax, 1
-    mov rbx, rax
+    push rax
+    mov rax, 0
+    push rax
+    pop rbx
+    pop rcx
     cmp rcx, rbx
-    ja if_end_1
+    jne if_end_1
     
 
+    mov rax, 0
+    push rax
+    mov rax, 999
+    push rax
+    pop rbx
+    pop rcx
+    mov rax, rcx
+    sub rax, rbx
+    
+
+    mov rsi, r15
+    call print
     mov rax, 1
     mov rsp, rbp
     pop rbp
@@ -42,37 +123,251 @@ F:
 
     
 if_end_1:
-    mov rax, [rbp+16]
-    mov rcx, rax
-    push rcx
-    push rbx
+    mov rax, [rbp+24]
+    push rax
+    mov rax, [rbp+24]
+    push rax
+    pop rbx
+    pop rcx
+    mov rax, rcx
+    cqo
+    imul rbx
     
+
+    push rax
+    mov rax, 4
+    push rax
     mov rax, [rbp+16]
-    mov rcx, rax
-    mov rax, 1
-    mov rbx, rax
+    push rax
+    pop rbx
+    pop rcx
+    mov rax, rcx
+    cqo
+    imul rbx
+    
+
+    push rax
+    mov rax, [rbp+32]
+    push rax
+    pop rbx
+    pop rcx
+    mov rax, rcx
+    cqo
+    imul rbx
+    
+
+    push rax
+    pop rbx
+    pop rcx
+    mov rax, rcx
+    sub rax, rbx
+    
+
+    mov [rbp-8], rax
+    
+
+    mov rax, [rbp-8]
+    mov rsi, r15
+    call print
+    
+;; empty mark IF number 2
+    mov rax, [rbp-8]
+    push rax
+    mov rax, 0
+    push rax
+    pop rbx
+    pop rcx
+    cmp rcx, rbx
+    jae if_end_2
+    
+
+    mov rax, 0
+    push rax
+    mov rax, 777
+    push rax
+    pop rbx
+    pop rcx
+    mov rax, rcx
+    sub rax, rbx
+    
+
+    mov rsi, r15
+    call print
+    mov rax, 2
+    mov rsp, rbp
+    pop rbp
+    ret
+    
+
+    
+if_end_2:
+    mov rax, 0
+    mov [rbp-16], rax
+    
+
+    mov rax, [rbp-8]
+    push rax
+    
+
+    call sqrt
+    
+
+    pop rbx
+    
+
+    mov [rbp-24], rax
+    
+
+    mov rax, [rbp-24]
+    mov rsi, r15
+    call print
+    
+;; empty mark IF number 3
+    mov rax, [rbp-24]
+    push rax
+    mov rax, 0
+    push rax
+    pop rbx
+    pop rcx
+    cmp rcx, rbx
+    jne if_end_3
+    
+
+    mov rax, 0
+    push rax
+    mov rax, [rbp+24]
+    push rax
+    pop rbx
+    pop rcx
     mov rax, rcx
     sub rax, rbx
     
 
     push rax
-    
-
-    call F
-    
-
-    pop rbx
-    
-
+    mov rax, 2
+    push rax
+    mov rax, [rbp+16]
+    push rax
     pop rbx
     pop rcx
-    
-
-    mov rbx, rax
     mov rax, rcx
+    cqo
     imul rbx
     
 
+    push rax
+    pop rbx
+    pop rcx
+    mov rax, rcx
+    cqo
+    idiv rbx
+    
+
+    mov [rbp-16], rax
+    
+
+    mov rax, [rbp-16]
+    mov rsi, r15
+    call print
+    mov rax, 3
+    mov rsp, rbp
+    pop rbp
+    ret
+    
+
+    
+if_end_3:
+    mov rax, 0
+    push rax
+    mov rax, [rbp+24]
+    push rax
+    pop rbx
+    pop rcx
+    mov rax, rcx
+    sub rax, rbx
+    
+
+    push rax
+    mov rax, [rbp-24]
+    push rax
+    pop rbx
+    pop rcx
+    mov rax, rcx
+    add rax, rbx
+    
+
+    push rax
+    mov rax, 2
+    push rax
+    mov rax, [rbp+16]
+    push rax
+    pop rbx
+    pop rcx
+    mov rax, rcx
+    cqo
+    imul rbx
+    
+
+    push rax
+    pop rbx
+    pop rcx
+    mov rax, rcx
+    cqo
+    idiv rbx
+    
+
+    mov [rbp-32], rax
+    
+
+    mov rax, 0
+    push rax
+    mov rax, [rbp+24]
+    push rax
+    pop rbx
+    pop rcx
+    mov rax, rcx
+    sub rax, rbx
+    
+
+    push rax
+    mov rax, [rbp-24]
+    push rax
+    pop rbx
+    pop rcx
+    mov rax, rcx
+    sub rax, rbx
+    
+
+    push rax
+    mov rax, 2
+    push rax
+    mov rax, [rbp+16]
+    push rax
+    pop rbx
+    pop rcx
+    mov rax, rcx
+    cqo
+    imul rbx
+    
+
+    push rax
+    pop rbx
+    pop rcx
+    mov rax, rcx
+    cqo
+    idiv rbx
+    
+
+    mov [rbp-40], rax
+    
+
+    mov rax, [rbp-32]
+    mov rsi, r15
+    call print
+    mov rax, [rbp-40]
+    mov rsi, r15
+    call print
+    mov rax, 0
     mov rsp, rbp
     pop rbp
     ret
@@ -84,16 +379,18 @@ FUCK:
     mov rbp, rsp
     
 
-    sub rsp, 16
+    sub rsp, 0
     
     
-;; empty mark IF number 2
+;; empty mark IF number 4
     mov rax, [rbp+16]
-    mov rcx, rax
+    push rax
     mov rax, 1
-    mov rbx, rax
+    push rax
+    pop rbx
+    pop rcx
     cmp rcx, rbx
-    ja if_end_2
+    ja if_end_4
     
 
     mov rax, 1
@@ -103,14 +400,13 @@ FUCK:
     
 
     
-if_end_2:
-    push rcx
-    push rbx
-    
+if_end_4:
     mov rax, [rbp+16]
-    mov rcx, rax
+    push rax
     mov rax, 1
-    mov rbx, rax
+    push rax
+    pop rbx
+    pop rcx
     mov rax, rcx
     sub rax, rbx
     
@@ -124,14 +420,13 @@ if_end_2:
     pop rbx
     
 
+    push rax
+    mov rax, [rbp+16]
+    push rax
     pop rbx
     pop rcx
-    
-
-    mov rcx, rax
-    mov rax, [rbp+16]
-    mov rbx, rax
     mov rax, rcx
+    cqo
     imul rbx
     
 
@@ -152,58 +447,43 @@ main:
     mov [rbp-8], rax
     
 
-    push rcx
-    push rbx
+    mov rax, 0
+    mov [rbp-16], rax
     
+
+    mov rax, 0
+    mov [rbp-24], rax
+    
+
     mov rsi, r15
     call scan
     mov [rbp-8], rax
     
 
-    pop rbx
-    pop rcx
+    mov rsi, r15
+    call scan
+    mov [rbp-16], rax
     
 
-    push rcx
-    push rbx
+    mov rsi, r15
+    call scan
+    mov [rbp-24], rax
     
-    push rcx
-    push rbx
-    
-    push rcx
-    push rbx
-    
+
+    mov rax, [rbp-24]
+    push rax
+    mov rax, [rbp-16]
+    push rax
     mov rax, [rbp-8]
     push rax
     
 
-    call FUCK
+    call Kvadratka
     
 
     pop rbx
-    
-
     pop rbx
-    pop rcx
-    
-
-    push rax
-    
-
-    call F
-    
-
     pop rbx
-    
-
-    pop rbx
-    pop rcx
-    
-
-    mov rsi, r15
-    call print
-    pop rbx
-    pop rcx
     
 
     mov rax, 0

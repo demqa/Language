@@ -612,7 +612,8 @@ int RemoveVariables(Backend *back, size_t number_of_variables)
         Val_t value = ListPopBack(back->NT);
         if (value.type == DEAD_VALUE.type)
         {
-            status = ASMcmp::DEAD_VALUE_REMOVED;
+            // status = ASMcmp::DEAD_VALUE_REMOVED;
+            PRINT(DEAD_VALUE_REMOVED);
             CATCH_ERR;
         }
     }
@@ -842,6 +843,9 @@ int EmitJump(Node_t *node, Backend *back, int keyword_id, size_t counter)
             break;
     }
 
+    PRINT_X(jump_code);
+    PRINT_D(jump_index);
+
     const char * appendix[] = {"if", "else", "if_end", "while", "while_end"};
 
     size_t appendix_index = 0;
@@ -861,8 +865,14 @@ int EmitJump(Node_t *node, Backend *back, int keyword_id, size_t counter)
             break;
     }
 
-    if (jump_code == JMP) EmitBytes(JMP);
-    else                  EmitBytes(JCOND, jump_code);
+    if (jump_code == JMP)
+    {
+        EmitBytes(JMP);
+    }
+    else
+    {
+        EmitBytes(JCOND, jump_code);
+    }
 
     EmitDstKeyw(keyword_id, counter);
 
@@ -880,13 +890,19 @@ int EmitCond(Node_t *node, Backend *back, int keyword_id, size_t counter)
 
     status = EmitExpr(node->left,  back);
     CATCH_ERR;
-    EmitLog("mov rcx, rax"); EmitBytes(REX_W, MOV_RM, MOD_RR | RCX_DST | RAX_SRC);
+    EmitLog("push rax"); EmitBytes(PUSH | RAX);
 
     status = EmitExpr(node->right, back);
     CATCH_ERR;
-    EmitLog("mov rbx, rax"); EmitBytes(REX_W, MOV_RM, MOD_RR | RBX_DST | RAX_SRC);
+    EmitLog("push rax"); EmitBytes(PUSH | RAX);
 
-    EmitLog("cmp rcx, rbx"); EmitBytes(REX_W, CMP_RM, MOD_RR | RCX_DST | RBX_SRC);
+    // EmitLog("mov rbx, rax"); EmitBytes(REX_W, MOV_RM, MOD_RR | RBX_DST | RAX_SRC);
+    // EmitLog("mov rcx, rax"); EmitBytes(REX_W, MOV_RM, MOD_RR | RCX_DST | RAX_SRC);
+
+    EmitLog("pop rbx"); EmitBytes(POP | RBX);
+    EmitLog("pop rcx"); EmitBytes(POP | RCX);
+
+    EmitLog("cmp rcx, rbx"); EmitBytes(REX_W, CMP_RM, MOD_RR | RBX_SRC | RCX_DST );
     status = EmitJump(node, back, keyword_id, counter);
     CATCH_ERR;
 
@@ -995,8 +1011,8 @@ int EmitCall(Node_t *node, Backend *back, int modification)
     CATCH_ERR;
     CHECK_NODES;
 
-    status = EmitSavingRegisters(back);
-    CATCH_ERR;
+    // status = EmitSavingRegisters(back);
+    // CATCH_ERR;
 
     Node_t *params = node->right;
 
@@ -1036,8 +1052,8 @@ int EmitCall(Node_t *node, Backend *back, int modification)
         CATCH_ERR;
     }
 
-    status = EmitRestoringRegisters(back);
-    CATCH_ERR;
+    // status = EmitRestoringRegisters(back);
+    // CATCH_ERR;
 
     return status;
 }
@@ -1118,7 +1134,6 @@ int EmitDefParams(Node_t *node, Backend *back)
 }
 
 // TODO: one day I will add global variables
-// DONE
 int EmitAssign(Node_t *node, Backend *back)
 {
     int status = BackendVerify(back);
@@ -1168,10 +1183,10 @@ int EmitMathOper(Node_t *node, Backend *back)
 
     switch (KEYW(node))
     {
-        case KEYW_ADD: EmitLog("add rax, rbx"); EmitBytes(REX_W, ADD_RM, MOD_RR | RAX_SRC | RBX_DST); break;
-        case KEYW_SUB: EmitLog("sub rax, rbx"); EmitBytes(REX_W, SUB_RM, MOD_RR | RAX_SRC | RBX_DST); break;
-        case KEYW_MUL: EmitLog("imul rbx");     EmitBytes(REX_W, MUL_RM, MOD_RR | IMUL_AP | RBX_DST); break;
-        case KEYW_DIV: EmitLog("idiv rbx");     EmitBytes(REX_W, DIV_RM, MOD_RR | IDIV_AP | RBX_DST); break;
+        case KEYW_ADD: EmitLog("add rax, rbx"); EmitBytes(REX_W, ADD_RM, MOD_RR | RBX_SRC | RAX_DST); break;
+        case KEYW_SUB: EmitLog("sub rax, rbx"); EmitBytes(REX_W, SUB_RM, MOD_RR | RBX_SRC | RAX_DST); break;
+        case KEYW_MUL: EmitLog("cqo"); EmitLog("imul rbx"); EmitBytes(REX_W, CQO); EmitBytes(REX_W, MUL_RM, MOD_RR | IMUL_AP | RBX_DST); break;
+        case KEYW_DIV: EmitLog("cqo"); EmitLog("idiv rbx"); EmitBytes(REX_W, CQO); EmitBytes(REX_W, DIV_RM, MOD_RR | IDIV_AP | RBX_DST); break;
 
         // case KEYW_POW: return EmitPow(node);
 
@@ -1252,19 +1267,23 @@ int EmitExpr(Node_t *node, Backend *back)
     {
         status = EmitExpr(node->left, back);
         CATCH_ERR;
-
-        EmitLog("mov rcx, rax"); EmitBytes(REX_W, MOV_RM, MOD_RR | RCX_DST | RAX_SRC);
+        EmitLog("push rax"); EmitBytes(PUSH | RAX);
 
         status = EmitExpr(node->right, back);
         CATCH_ERR;
+        EmitLog("push rax"); EmitBytes(PUSH | RAX);
 
-        EmitLog("mov rbx, rax"); EmitBytes(REX_W, MOV_RM, MOD_RR | RBX_DST | RAX_SRC);
+        // EmitLog("mov rcx, rax"); EmitBytes(REX_W, MOV_RM, MOD_RR | RCX_DST | RAX_SRC);
+        // EmitLog("mov rbx, rax"); EmitBytes(REX_W, MOV_RM, MOD_RR | RBX_DST | RAX_SRC);
 
         if (!IsMathOper(node))
         {
             status = ASMcmp::INVALID_EXPRESSION;
             CATCH_ERR;
         }
+
+        EmitLog("pop rbx"); EmitBytes(POP | RBX);
+        EmitLog("pop rcx"); EmitBytes(POP | RCX);
 
         status = EmitMathOper(node, back);
         CATCH_ERR;
@@ -1335,7 +1354,7 @@ int EmitStackFrame(Node_t *node, Backend *back)
         node = node->left;
     }
 
-    int64_t IM8 = 16 + back->number_of_locals * 8; // 16 = 8 * 2 saved registers
+    int64_t IM8 = back->number_of_locals * 8; // 16 = 8 * 2 saved registers
     if (IM8 > 127 || IM8 < -128)
     {
         status = ASMcmp::ARG_OVERFLOW;
