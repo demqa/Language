@@ -2,19 +2,17 @@
 
     SECTION .text
 
-print:
+    GLOBAL _start
 
-    mov r10, rsi
+print:
 
     mov rdi, r10
     mov rbx, rax
-
     call Itoa10
 
     mov rsi, r10
     mov rax, 1
     mov rdi, 1
-    mov rdx, 10
     syscall
 
     ret
@@ -36,10 +34,12 @@ print:
 ;------------------------------------------------
 Itoa10:
 
+       mov rsi, rdi
+
        mov rcx, TEN
+       push rdi
 
        cmp rbx, 0h
-       push rdi
        jns .proceed
 
        mov al, MINUS
@@ -55,7 +55,8 @@ Itoa10:
        xor rdx, rdx
 
        mov rax, rbx   ; ax = N
-       div rcx        ; ax = N / 10
+       cqo
+       idiv rcx       ; ax = N / 10
 
        mov rbx, rax   ; saving next integer
 
@@ -73,7 +74,13 @@ Itoa10:
        stosb
 
        pop rbx
+
+       mov rax, rdi
+       sub rax, rsi
+       push rax
+
        sub rdi, 2
+
 
 .reverse:
        mov al, [rdi]
@@ -87,5 +94,6 @@ Itoa10:
        cmp rbx, rdi
        jb .reverse
 
+       pop rdx
        ret
 ;------------------------------------------------

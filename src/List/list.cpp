@@ -598,7 +598,7 @@ size_t     ListValueIndex(List_t *list, int64_t hash)
     {
         if (list->data[elem].value.hash == hash)
         {
-            PRINT(NOT_EXACT_COMPARING_HASH);
+            // PRINT(NOT_EXACT_COMPARING_HASH);
             return elem;
         }
 

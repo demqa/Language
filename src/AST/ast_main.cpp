@@ -7,13 +7,9 @@ int main()
 
     TokensCtor(tokens);
 
-    PRINT_LINE;
-
     GetTokens("../code/code", tokens);
 
-    PRINT_LINE;
-
-    PrintTokens(tokens);
+    // PrintTokens(tokens);
 
     Tree_t *tree = (Tree_t *)       calloc(1, sizeof(Tree_t));
     if (tree == nullptr)   return EXIT_FAILURE;
@@ -21,7 +17,7 @@ int main()
 
     FillTree(tree, tokens);
 
-    TreeDump(tree);
+    // TreeDump(tree);
 
     PoopTree("../code/ast", tree);
 

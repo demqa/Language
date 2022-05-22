@@ -204,12 +204,12 @@ enum OpCodes
     CALL    = 0xE8,
 
     JCOND   = 0x0F,
-    JAE     = 0x83,
-    JA      = 0x87,
+    JGE     = 0x8D,
+    JG      = 0x8F,
     JE      = 0x84,
     JNE     = 0x85,
-    JB      = 0x82,
-    JBE     = 0x86,
+    JL      = 0x8C,
+    JLE     = 0x8E,
 
     JMP     = 0xE9,
 

@@ -612,6 +612,7 @@ int RemoveVariables(Backend *back, size_t number_of_variables)
         Val_t value = ListPopBack(back->NT);
         if (value.type == DEAD_VALUE.type)
         {
+            // TODO: fix this (reassign)
             // status = ASMcmp::DEAD_VALUE_REMOVED;
             PRINT(DEAD_VALUE_REMOVED);
             CATCH_ERR;
@@ -828,12 +829,12 @@ int EmitJump(Node_t *node, Backend *back, int keyword_id, size_t counter)
 
     switch (KEYW(node))
     {
-        case KEYW_LESS:      jump_index = 1; jump_code = JAE; break;
-        case KEYW_LESSOREQ:  jump_index = 2; jump_code = JA;  break;
+        case KEYW_LESS:      jump_index = 1; jump_code = JGE; break;
+        case KEYW_LESSOREQ:  jump_index = 2; jump_code = JG;  break;
         case KEYW_NOTEQUAL:  jump_index = 3; jump_code = JE;  break;
         case KEYW_EQUAL:     jump_index = 4; jump_code = JNE; break;
-        case KEYW_GREATOREQ: jump_index = 5; jump_code = JB;  break;
-        case KEYW_GREAT:     jump_index = 6; jump_code = JBE; break;
+        case KEYW_GREATOREQ: jump_index = 5; jump_code = JL;  break;
+        case KEYW_GREAT:     jump_index = 6; jump_code = JLE; break;
 
         case KEYW_COMMA:     jump_index = 0; jump_code = JMP; break;
 
@@ -842,9 +843,6 @@ int EmitJump(Node_t *node, Backend *back, int keyword_id, size_t counter)
             CATCH_ERR;
             break;
     }
-
-    PRINT_X(jump_code);
-    PRINT_D(jump_index);
 
     const char * appendix[] = {"if", "else", "if_end", "while", "while_end"};
 
@@ -865,14 +863,8 @@ int EmitJump(Node_t *node, Backend *back, int keyword_id, size_t counter)
             break;
     }
 
-    if (jump_code == JMP)
-    {
-        EmitBytes(JMP);
-    }
-    else
-    {
-        EmitBytes(JCOND, jump_code);
-    }
+    if (jump_code == JMP) EmitBytes(JMP);
+    else                  EmitBytes(JCOND, jump_code);
 
     EmitDstKeyw(keyword_id, counter);
 
@@ -1372,15 +1364,8 @@ int EmitStackFrameClose(Backend *back)
     int status = BackendVerify(back);
     CATCH_ERR;
 
-    PRINT_D(back->number_of_locals);
-
-    // status = EmitReturn(back->last_return, back);
-    // CATCH_ERR;
-
     status = RemoveVariables(back, back->number_of_params + back->number_of_locals);
     CATCH_ERR;
-
-    PRINT_D(back->number_of_locals);
 
     back->number_of_params = 0;
     back->number_of_locals = 0;
@@ -1454,12 +1439,8 @@ int EmitFuncDef(Node_t *node, Backend *back)
     status = EmitStackFrame(stmts, back);
     CATCH_ERR;
 
-    PRINT_D(back->number_of_locals);
-
     status = EmitStmts(stmts, back);
     CATCH_ERR;
-
-    PRINT_D(back->number_of_locals);
 
     status = EmitStackFrameClose(back);
     CATCH_ERR;
@@ -1494,17 +1475,11 @@ int EmitMain(Node_t *node, Backend *back)
     status = EmitStackFrame(stmts, back);
     CATCH_ERR;
 
-    PRINT_D(back->number_of_locals);
-
     status = EmitStmts(stmts, back);
     CATCH_ERR;
 
-    PRINT_D(back->number_of_locals);
-
     status = EmitStackFrameClose(back);
     CATCH_ERR;
-
-    PRINT_D(back->number_of_locals);
 
     return status;
 }
@@ -1690,10 +1665,9 @@ int EmitStdLib(Backend *back)
 
     static uint8_t print_code[] =
     {
-      0x49, 0x89, 0xf2, 0x4c, 0x89, 0xd7, 0x48, 0x89, 0xc3, 0xe8, 0x15, 0x0, 0x0, 0x0, 0x4c, 0x89, 0xd6, 0xb8, 0x1, 0x0, 0x0, 0x0, 0xbf, 0x1, 0x0, 0x0, 0x0, 0xba, 0xa,
-      0x0, 0x0, 0x0, 0xf, 0x5, 0xc3, 0xb9, 0xa,
-      0x0, 0x0, 0x0, 0x48, 0x83, 0xfb, 0x0, 0x57, 0x79, 0x8, 0xb0, 0x2d, 0xaa, 0x5a, 0x57, 0x48, 0xf7, 0xdb, 0x48, 0x31, 0xd2, 0x48, 0x89, 0xd8, 0x48, 0xf7, 0xf1, 0x48, 0x89, 0xc3, 0x48, 0x89, 0xd0, 0x4, 0x30, 0xaa, 0x66, 0x83, 0xfb, 0x0, 0x75, 0xe8, 0xb0, 0xa,
-      0xaa, 0x5b, 0x48, 0x83, 0xef, 0x2, 0x8a, 0x7, 0x8a, 0x13, 0x88, 0x17, 0x88, 0x3, 0x48, 0xff, 0xc3, 0x48, 0xff, 0xcf, 0x48, 0x39, 0xfb, 0x72, 0xed, 0xc3,
+        0x4c, 0x89, 0xd7, 0x48, 0x89, 0xc3, 0xe8, 0x10, 0x0, 0x0, 0x0, 0x4c, 0x89, 0xd6, 0xb8, 0x1, 0x0, 0x0, 0x0, 0xbf, 0x1, 0x0, 0x0, 0x0, 0xf, 0x5, 0xc3, 0x48, 0x89, 0xfe, 0xb9, 0xa,
+        0x0, 0x0, 0x0, 0x57, 0x48, 0x83, 0xfb, 0x0, 0x79, 0x8, 0xb0, 0x2d, 0xaa, 0x5a, 0x57, 0x48, 0xf7, 0xdb, 0x48, 0x31, 0xd2, 0x48, 0x89, 0xd8, 0x48, 0x99, 0x48, 0xf7, 0xf9, 0x48, 0x89, 0xc3, 0x48, 0x89, 0xd0, 0x4, 0x30, 0xaa, 0x66, 0x83, 0xfb, 0x0, 0x75, 0xe6, 0xb0, 0xa,
+        0xaa, 0x5b, 0x48, 0x89, 0xf8, 0x48, 0x29, 0xf0, 0x50, 0x48, 0x83, 0xef, 0x2, 0x8a, 0x7, 0x8a, 0x13, 0x88, 0x17, 0x88, 0x3, 0x48, 0xff, 0xc3, 0x48, 0xff, 0xcf, 0x48, 0x39, 0xfb, 0x72, 0xed, 0x5a, 0xc3,
     };
 
 

@@ -1098,7 +1098,7 @@ Node_t *GetP(Tokens_t *tokens, size_t *index)
 
         if (Require(tokens, index, KEYW_CLRND)) return nullptr;
 
-        PRINT(EXIT_GETP);
+        // PRINT(EXIT_GETP);
 
         return val;
     }

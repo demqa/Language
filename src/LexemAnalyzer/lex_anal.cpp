@@ -268,12 +268,8 @@ int GetTokens (const char *filename, Tokens_t *tokens)
 
     FILE *stream = nullptr;
 
-    PRINT_LINE;
-
     status = OpenFile(filename, &stream, "r");
     if (status) return status;
-
-    PRINT_LINE;
 
     char *buffer = nullptr;
     status = ReadBuffer(&buffer, stream);
