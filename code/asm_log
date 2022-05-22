@@ -1,0 +1,214 @@
+    
+GLOBAL _start
+
+    SECTION .text
+    
+_start:
+    add rsp, -64
+    mov r15, rsp
+    call main
+    add rsp, 64
+    
+
+    mov rax, 0x3C
+    xor rdi, rdi
+    syscall
+    
+;;--------------------------
+
+    
+F:
+    push rbp
+    mov rbp, rsp
+    
+
+    sub rsp, 16
+    
+    
+;; empty mark IF number 1
+    mov rax, [rbp+16]
+    mov rcx, rax
+    mov rax, 1
+    mov rbx, rax
+    cmp rcx, rbx
+    ja if_end_1
+    
+
+    mov rax, 1
+    mov rsp, rbp
+    pop rbp
+    ret
+    
+
+    
+if_end_1:
+    mov rax, [rbp+16]
+    mov rcx, rax
+    push rcx
+    push rbx
+    
+    mov rax, [rbp+16]
+    mov rcx, rax
+    mov rax, 1
+    mov rbx, rax
+    mov rax, rcx
+    sub rax, rbx
+    
+
+    push rax
+    
+
+    call F
+    
+
+    pop rbx
+    
+
+    pop rbx
+    pop rcx
+    
+
+    mov rbx, rax
+    mov rax, rcx
+    imul rbx
+    
+
+    mov rsp, rbp
+    pop rbp
+    ret
+    
+
+    
+FUCK:
+    push rbp
+    mov rbp, rsp
+    
+
+    sub rsp, 16
+    
+    
+;; empty mark IF number 2
+    mov rax, [rbp+16]
+    mov rcx, rax
+    mov rax, 1
+    mov rbx, rax
+    cmp rcx, rbx
+    ja if_end_2
+    
+
+    mov rax, 1
+    mov rsp, rbp
+    pop rbp
+    ret
+    
+
+    
+if_end_2:
+    push rcx
+    push rbx
+    
+    mov rax, [rbp+16]
+    mov rcx, rax
+    mov rax, 1
+    mov rbx, rax
+    mov rax, rcx
+    sub rax, rbx
+    
+
+    push rax
+    
+
+    call FUCK
+    
+
+    pop rbx
+    
+
+    pop rbx
+    pop rcx
+    
+
+    mov rcx, rax
+    mov rax, [rbp+16]
+    mov rbx, rax
+    mov rax, rcx
+    imul rbx
+    
+
+    mov rsp, rbp
+    pop rbp
+    ret
+    
+
+    
+main:
+    push rbp
+    mov rbp, rsp
+    
+
+    sub rsp, 24
+    
+    mov rax, 0
+    mov [rbp-8], rax
+    
+
+    push rcx
+    push rbx
+    
+    mov rsi, r15
+    call scan
+    mov [rbp-8], rax
+    
+
+    pop rbx
+    pop rcx
+    
+
+    push rcx
+    push rbx
+    
+    push rcx
+    push rbx
+    
+    push rcx
+    push rbx
+    
+    mov rax, [rbp-8]
+    push rax
+    
+
+    call FUCK
+    
+
+    pop rbx
+    
+
+    pop rbx
+    pop rcx
+    
+
+    push rax
+    
+
+    call F
+    
+
+    pop rbx
+    
+
+    pop rbx
+    pop rcx
+    
+
+    mov rsi, r15
+    call print
+    pop rbx
+    pop rcx
+    
+
+    mov rax, 0
+    mov rsp, rbp
+    pop rbp
+    ret
+    
+

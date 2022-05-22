@@ -1,30 +1,18 @@
+[bits 64]
 
     SECTION .text
 
-GLOBAL _start
-
-_start:
-
-    call scan
-
-    mov rax, 0x3C
-    xor rdi, rdi
-    syscall
-
-
 scan:
+
+    mov r10, rsi
 
     mov rax, 0     ; read
     mov rdi, 0     ; stdin
-    mov rsi, buff  ; buff_ptr
+    mov rsi, r10
     mov rdx, 10    ;
     syscall
 
     call Atoi10
-
-    nop
-    nop
-    nop
 
     ret
 
@@ -44,8 +32,6 @@ scan:
 ; Destr: BX, DX, CL
 ;------------------------------------------------
 Atoi10:
-       mov rsi, buff
-
        xor bx, bx
        xor ah, ah
        xor cl, cl
@@ -108,9 +94,3 @@ Atoi10:
        mov rax, rbx
        ret
 ;------------------------------------------------
-
-    SECTION .data
-
-buff:
-    db 10 dup(0)
-    db 0

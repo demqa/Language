@@ -92,10 +92,12 @@ namespace ASMcmp
         ARG_OVERFLOW               = 0x837,
 
         CANT_FIND_LABEL            = 0x838,
+        UNDEFINED_CALL_MOD         = 0x839,
 
     };
 
     const size_t INITIAL_CAPACITY = 16;
+    const size_t STACK_BUFF_SIZE  = 64;
 }
 
 struct Backend
@@ -109,10 +111,13 @@ struct Backend
     List_t *LabelsSrc;
 
     Node_t *main;
+    Node_t *last_return;
 
     uint8_t *code_buff;
     size_t   buff_ptr;
     size_t   buff_size;
+
+    size_t stack_buff; // <= 120
 
     size_t if_counter;
     size_t while_counter;
@@ -142,6 +147,12 @@ enum LabelsId
 {
     DST_ID = 1,
     SRC_ID = 2,
+};
+
+enum CallMods
+{
+    PRINT_MOD = 1,
+    SCAN_MOD  = 2,
 };
 
 enum OpCodes
@@ -177,6 +188,11 @@ enum OpCodes
     REX   = 0x40,
     REX_W = REX | 0b1000,
     REX_B = REX | 0b0001,
+    REX_R = REX | 0b0100,
+
+    REX_WB = REX_W | REX_B,
+    REX_WR = REX_W | REX_R,
+    REX_RB = REX_R | REX_B,
 
     MOD_RR  = 0b11000000,
 

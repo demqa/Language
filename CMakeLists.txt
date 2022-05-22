@@ -19,8 +19,8 @@ add_executable( ASMcompilation
     src/List/list.cpp
 
     src/AST/ast_comp.cpp
-    src/ELF/elf_gen.cpp
 
+    src/ELF/elf_gen.cpp
     src/ASM/asm_comp.cpp
     src/ASM/asm_main.cpp
 )

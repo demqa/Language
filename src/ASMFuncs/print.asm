@@ -1,27 +1,19 @@
+[bits 64]
+
     SECTION .text
-
-GLOBAL _start
-
-_start:
-
-    mov rax, 123456
-
-    call print
-
-    mov rax, 0x3C
-    xor rdi, rdi
-    syscall
 
 print:
 
-    mov rdi, buff
+    mov r10, rsi
+
+    mov rdi, r10
     mov rbx, rax
 
     call Itoa10
 
+    mov rsi, r10
     mov rax, 1
     mov rdi, 1
-    mov rsi, buff
     mov rdx, 10
     syscall
 
@@ -97,9 +89,3 @@ Itoa10:
 
        ret
 ;------------------------------------------------
-
-    SECTION .data
-
-buff:
-    db 10 dup(0)
-    db 0

@@ -1,35 +1,31 @@
 
 Danse Macabre
 {
-   FUCKtorial(7);
+   b = 0;
 
-   2 + 3;
+   Marcato b;
 
-   FUCK(7);
+   Forte (F(FUCK(b)));
 
    Fine 0;
 }
 
-Opus FUCKtorial(x)
+Opus F(y)
 {
-    ans = 1;
-
-    Repetizione (x > 1)
+    Piacere (y <= 1) Deciso
     {
-        ans = ans * x;
-        x = x - 1;
+        Fine 1;
     }
 
-    Fine ans;
+    Fine y * F(y - 1);
 }
 
 Opus FUCK(x)
 {
-
     Piacere (x <= 1) Deciso
     {
         Fine 1;
     }
 
-    Fine x * FUCK(x - 1);
+    Fine FUCK(x - 1) * x;
 }
