@@ -79,13 +79,15 @@ int GenerateElf(const char *filename, Buff *buff)
     result = fwrite(buff->buffer, sizeof(char), buff->size, file);
     if (result != buff->size) return ElfGen::BuffWriteFailed;
 
+    result = fclose(file);
+    if (result != 0)          return ElfGen::ClosingFileFailed;
+
     static char format[] = "chmod +x %s";
 
-    char buffer[ElfGen::BuffMaxSize] = {};
+    char cmd[ElfGen::CmdMaxSize] = {};
+    snprintf(cmd, sizeof(cmd), format, filename);
 
-    snprintf(buffer, sizeof(buffer), format, filename);
-
-    system(buffer);
+    system(cmd);
 
     return 0;
 }

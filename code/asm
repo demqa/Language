@@ -1,8 +1,0 @@
-CALL main:
-HLT
-
-FUCK:
-PUSH bx
-PUSH 0
-ADD
-POP bx

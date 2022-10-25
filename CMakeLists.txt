@@ -25,4 +25,4 @@ add_executable( ASMcompilation
     src/ASM/asm_main.cpp
 )
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g3 -mavx")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O2 -mavx")

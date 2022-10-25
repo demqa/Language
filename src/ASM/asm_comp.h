@@ -155,6 +155,8 @@ enum CallMods
     SCAN_MOD  = 2,
 };
 
+const int64_t arg_offset =  4;
+
 enum OpCodes
 {
     RAX   = 0b000,

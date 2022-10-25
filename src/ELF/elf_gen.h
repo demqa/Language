@@ -156,7 +156,7 @@ namespace ElfGen
 
     enum Constants
     {
-        BuffMaxSize = 0x20,
+        CmdMaxSize = 0x20,
     };
 
     enum Errors
@@ -167,12 +167,13 @@ namespace ElfGen
         FilenameIsNullptr = 0x900,
         BuffIsNullptr     = 0x901,
         OpeningFileFailed = 0x902,
+        ClosingFileFailed = 0x903,
 
-        EhdrWriteFailed   = 0x903,
-        PhdrWriteFailed   = 0x904,
-        BuffWriteFailed   = 0x905,
+        EhdrWriteFailed   = 0x904,
+        PhdrWriteFailed   = 0x905,
+        BuffWriteFailed   = 0x906,
 
-        BufferIsNullptr   = 0x906,
+        BufferIsNullptr   = 0x907,
 
     };
 

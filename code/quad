@@ -25,3 +25,4 @@ func quad(a, b, c)
         print 666;
     }
 }
+

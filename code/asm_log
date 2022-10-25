@@ -2,6 +2,8 @@
 GLOBAL _start
 
     SECTION .text
+    EXTERN scan
+    EXTERN print
     
 _start:
     add rsp, -64
@@ -103,18 +105,6 @@ Kvadratka:
     jne if_end_1
     
 
-    mov rax, 0
-    push rax
-    mov rax, 999
-    push rax
-    pop rbx
-    pop rcx
-    mov rax, rcx
-    sub rax, rbx
-    
-
-    mov rsi, r15
-    call print
     mov rax, 1
     mov rsp, rbp
     pop rbp
@@ -166,9 +156,6 @@ if_end_1:
     mov [rbp-8], rax
     
 
-    mov rax, [rbp-8]
-    mov rsi, r15
-    call print
     
 ;; empty mark IF number 2
     mov rax, [rbp-8]
@@ -181,18 +168,6 @@ if_end_1:
     jae if_end_2
     
 
-    mov rax, 0
-    push rax
-    mov rax, 777
-    push rax
-    pop rbx
-    pop rcx
-    mov rax, rcx
-    sub rax, rbx
-    
-
-    mov rsi, r15
-    call print
     mov rax, 2
     mov rsp, rbp
     pop rbp
@@ -218,9 +193,6 @@ if_end_2:
     mov [rbp-24], rax
     
 
-    mov rax, [rbp-24]
-    mov rsi, r15
-    call print
     
 ;; empty mark IF number 3
     mov rax, [rbp-24]
@@ -267,7 +239,6 @@ if_end_2:
     
 
     mov rax, [rbp-16]
-    mov rsi, r15
     call print
     mov rax, 3
     mov rsp, rbp
@@ -362,10 +333,8 @@ if_end_3:
     
 
     mov rax, [rbp-32]
-    mov rsi, r15
     call print
     mov rax, [rbp-40]
-    mov rsi, r15
     call print
     mov rax, 0
     mov rsp, rbp
@@ -441,51 +410,71 @@ main:
     mov rbp, rsp
     
 
-    sub rsp, 24
+    sub rsp, 16
     
     mov rax, 0
     mov [rbp-8], rax
     
 
-    mov rax, 0
-    mov [rbp-16], rax
-    
-
-    mov rax, 0
-    mov [rbp-24], rax
-    
-
-    mov rsi, r15
     call scan
     mov [rbp-8], rax
     
 
-    mov rsi, r15
-    call scan
+    mov rax, 1000000
     mov [rbp-16], rax
     
 
-    mov rsi, r15
-    call scan
-    mov [rbp-24], rax
     
-
-    mov rax, [rbp-24]
-    push rax
+while_2:
     mov rax, [rbp-16]
     push rax
+    mov rax, 0
+    push rax
+    pop rbx
+    pop rcx
+    cmp rcx, rbx
+    jbe while_end_2
+    
+
     mov rax, [rbp-8]
     push rax
     
 
-    call Kvadratka
+    call FUCK
     
 
     pop rbx
+    
+
+    mov rax, [rbp-16]
+    push rax
+    mov rax, 1
+    push rax
     pop rbx
+    pop rcx
+    mov rax, rcx
+    sub rax, rbx
+    
+
+    mov [rbp-16], rax
+    
+
+    jmp while_2
+    
+
+    
+while_end_2:
+    mov rax, [rbp-8]
+    push rax
+    
+
+    call FUCK
+    
+
     pop rbx
     
 
+    call print
     mov rax, 0
     mov rsp, rbp
     pop rbp

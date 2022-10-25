@@ -1,16 +1,16 @@
-[bits 64]
+;; (C) demqa 2022
 
-    SECTION .text
+SECTION .text
 
-    GLOBAL _start
+GLOBAL print
 
 print:
 
-    mov rdi, r10
+    mov rdi, r15
     mov rbx, rax
     call Itoa10
 
-    mov rsi, r10
+    mov rsi, r15
     mov rax, 1
     mov rdi, 1
     syscall
@@ -97,3 +97,4 @@ Itoa10:
        pop rdx
        ret
 ;------------------------------------------------
+

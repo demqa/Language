@@ -1,17 +1,18 @@
-[bits 64]
+;; (C) demqa 2022
 
-    SECTION .text
+SECTION .text
+
+GLOBAL scan
 
 scan:
 
-    mov r10, rsi
-
     mov rax, 0     ; read
     mov rdi, 0     ; stdin
-    mov rsi, r10
-    mov rdx, 10    ;
+    mov rsi, r15
+    mov rdx, 20    ;
     syscall
 
+    mov rsi, r15
     call Atoi10
 
     ret
@@ -94,3 +95,4 @@ Atoi10:
        mov rax, rbx
        ret
 ;------------------------------------------------
+

@@ -5,7 +5,7 @@ Danse Macabre
 
     Marcato x;
 
-    n = 1000000;
+    n = 10000000;
 
     Repetizione (n > 0)
     {

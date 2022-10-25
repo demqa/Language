@@ -27,4 +27,23 @@ I have to solve some problems with my compilator:
    a. I found out, that RAM is not necessary for my project. There I can store some constants, that are global in file. But using global variables is harmless for security, so I will avoid it, and my users will be secured from it.
 
 
-5. Now I've decided to create some basis of my program.
+# How to use
+
+There are code samples in *code* directory. Default file of source code in my language is code.
+
+## Compilation with NASM
+
+You can use my NASM logs to compile project with NASM and link with ld.
+
+File *asm_log* is created with my own compiler. 
+
+```shell
+demqa:code/ (x86-64*) $ nasm -felf64 asm_log -o fact.o
+demqa:code/ (x86-64*) $ nasm -felf64 ../src/ASMFuncs/print.asm -o print.o
+demqa:code/ (x86-64*) $ nasm -felf64 ../src/ASMFuncs/scan.asm -o scan.o
+demqa:code/ (x86-64*) $ ld fact.o scan.o print.o
+demqa:code/ (x86-64*) $ ./a.out
+5
+120
+```
+
